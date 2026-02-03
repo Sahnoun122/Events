@@ -21,13 +21,21 @@ export class AuthService {
      }
      const hashPassword = await bcrypt.hash(body.password , 10);
 
-     return this.userService.create({
-
+     const newUser = await this.userService.create({
         fullName: body.fullName,
         email: body.email,
         password:hashPassword,
-        roles: body.roles
+        roles: body.roles || [Role.PARTICIPANT]
      });
+
+     return {
+        user: {
+          _id: newUser._id,
+          fullName: newUser.fullName,
+          email: newUser.email,
+          roles: newUser.roles,
+        }
+     };
     }
 
     async login (email: string , password : string){
@@ -52,6 +60,12 @@ export class AuthService {
 
        return{
         access_token : this.jwtSerrvice.sign(payload),
+        user: {
+          _id: user._id,
+          fullName: user.fullName,
+          email: user.email,
+          roles: user.roles,
+        }
        }
     }
 }

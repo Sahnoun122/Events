@@ -47,7 +47,7 @@ export  function AuthProvider({ children } : {children : ReactNode}){
 
     const register = async(fullName : string , email:string , password : string)=>{
         
-        const res = await fetch("http://localhost:3000/auth/regter", {
+        const res = await fetch("http://localhost:3000/auth/register", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ fullName, email, password }),
@@ -68,7 +68,7 @@ export  function AuthProvider({ children } : {children : ReactNode}){
 
 
       return(
-        <AuthContext.Provider value={{ user  , register}}>
+        <AuthContext.Provider value={{ user  , register , login}}>
             {children}
         </AuthContext.Provider>
       )

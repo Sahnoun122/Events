@@ -23,7 +23,7 @@ export class AuthService {
 
      return this.userService.create({
 
-        fullName: body.name,
+        fullName: body.fullName,
         email: body.email,
         password:hashPassword,
         roles: body.roles

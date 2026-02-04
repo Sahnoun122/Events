@@ -1,205 +1,263 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { getModelToken } from '@nestjs/mongoose';
-import { EventsService } from 'src/events/events.service';
-import { Event } from 'src/events/event.schema';
-import { EventStatus } from 'src/common/enums/event-status.enum';
-import { BadRequestException, NotFoundException } from '@nestjs/common';
+import { AuthService } from './auth.service';
+import { UsersService } from 'src/users/users.service';
+import { JwtService } from '@nestjs/jwt';
+import { BadRequestException } from '@nestjs/common';
+import { Role } from 'src/common/enums/role.enum';
+import * as bcrypt from 'bcrypt';
 
-describe('EventsService', () => {
-  let service: EventsService;
+jest.mock('bcrypt');
+const mockedBcrypt = bcrypt as jest.Mocked<typeof bcrypt>;
 
-  const mockEventModel = {
+describe('AuthService', () => {
+  let authService: AuthService;
+  let usersService: UsersService;
+  let jwtService: JwtService;
+
+  const mockUsersService = {
+    findByEmail: jest.fn(),
     create: jest.fn(),
-    find: jest.fn(),
-    findById: jest.fn(),
+  };
+
+  const mockJwtService = {
+    sign: jest.fn(),
   };
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
-        EventsService,
+        AuthService,
         {
-          provide: getModelToken(Event.name),
-          useValue: mockEventModel,
+          provide: UsersService,
+          useValue: mockUsersService,
+        },
+        {
+          provide: JwtService,
+          useValue: mockJwtService,
         },
       ],
     }).compile();
 
-    service = module.get<EventsService>(EventsService);
+    authService = module.get<AuthService>(AuthService);
+    usersService = module.get<UsersService>(UsersService);
+    jwtService = module.get<JwtService>(JwtService);
 
     jest.clearAllMocks();
   });
 
-  describe('create()', () => {
-    it('should create event with status DRAFT', async () => {
-      const dto = {
-        title: 'React Workshop',
-        description: 'Advanced React',
-        date: '2026-02-10T10:00:00.000Z',
-        location: 'Casablanca',
-        capacity: 30,
+  describe('register', () => {
+    const registerDto = {
+      fullName: 'John Doe',
+      email: 'john@example.com',
+      password: 'password123',
+    };
+
+    it('should successfully register a new user with participant role', async () => {
+      const hashedPassword = 'hashedPassword123';
+      const createdUser = {
+        _id: 'user123',
+        fullName: registerDto.fullName,
+        email: registerDto.email,
+        password: hashedPassword,
+        roles: [Role.PARTICIPANT],
       };
 
-      const createdEvent = {
-        ...dto,
-        date: new Date(dto.date),
-        status: EventStatus.DRAFT,
-      };
+      mockUsersService.findByEmail.mockResolvedValue(null);
+      mockedBcrypt.hash.mockResolvedValue(hashedPassword as never);
+      mockUsersService.create.mockResolvedValue(createdUser);
 
-      mockEventModel.create.mockResolvedValue(createdEvent);
+      const result = await authService.register(registerDto);
 
-      const result = await service.create(dto as any);
-
-      expect(mockEventModel.create).toHaveBeenCalledWith({
-        ...dto,
-        date: new Date(dto.date),
-        status: EventStatus.DRAFT,
+      expect(mockUsersService.findByEmail).toHaveBeenCalledWith(registerDto.email);
+      expect(mockedBcrypt.hash).toHaveBeenCalledWith(registerDto.password, 10);
+      expect(mockUsersService.create).toHaveBeenCalledWith({
+        fullName: registerDto.fullName,
+        email: registerDto.email,
+        password: hashedPassword,
+        roles: [Role.PARTICIPANT],
       });
+      expect(result).toEqual({
+        user: {
+          _id: createdUser._id,
+          fullName: createdUser.fullName,
+          email: createdUser.email,
+          roles: createdUser.roles,
+        },
+      });
+    });
 
-      expect(result.status).toBe(EventStatus.DRAFT);
-      expect(result.title).toBe(dto.title);
+    it('should register user with admin role when provided', async () => {
+      const adminRegisterDto = {
+        ...registerDto,
+        roles: 'admin',
+      };
+
+      const hashedPassword = 'hashedPassword123';
+      const createdUser = {
+        _id: 'admin123',
+        fullName: adminRegisterDto.fullName,
+        email: adminRegisterDto.email,
+        password: hashedPassword,
+        roles: [Role.ADMIN],
+      };
+
+      mockUsersService.findByEmail.mockResolvedValue(null);
+      mockedBcrypt.hash.mockResolvedValue(hashedPassword as never);
+      mockUsersService.create.mockResolvedValue(createdUser);
+
+      const result = await authService.register(adminRegisterDto);
+
+      expect(mockUsersService.create).toHaveBeenCalledWith({
+        fullName: adminRegisterDto.fullName,
+        email: adminRegisterDto.email,
+        password: hashedPassword,
+        roles: ['admin'],
+      });
+      expect(result.user.roles).toEqual([Role.ADMIN]);
+    });
+
+    it('should handle roles as array', async () => {
+      const adminRegisterDto = {
+        ...registerDto,
+        roles: ['admin'],
+      };
+
+      const hashedPassword = 'hashedPassword123';
+      const createdUser = {
+        _id: 'admin123',
+        fullName: adminRegisterDto.fullName,
+        email: adminRegisterDto.email,
+        password: hashedPassword,
+        roles: [Role.ADMIN],
+      };
+
+      mockUsersService.findByEmail.mockResolvedValue(null);
+      mockedBcrypt.hash.mockResolvedValue(hashedPassword as never);
+      mockUsersService.create.mockResolvedValue(createdUser);
+
+      await authService.register(adminRegisterDto);
+
+      expect(mockUsersService.create).toHaveBeenCalledWith({
+        fullName: adminRegisterDto.fullName,
+        email: adminRegisterDto.email,
+        password: hashedPassword,
+        roles: ['admin'],
+      });
+    });
+
+    it('should throw BadRequestException if email already exists', async () => {
+      const existingUser = {
+        _id: 'existing123',
+        email: registerDto.email,
+        fullName: 'Existing User',
+        password: 'hashedPassword',
+        roles: [Role.PARTICIPANT],
+      };
+
+      mockUsersService.findByEmail.mockResolvedValue(existingUser);
+
+      await expect(authService.register(registerDto)).rejects.toThrow(BadRequestException);
+      await expect(authService.register(registerDto)).rejects.toThrow('email already exists');
+
+      expect(mockUsersService.findByEmail).toHaveBeenCalledWith(registerDto.email);
+      expect(mockUsersService.create).not.toHaveBeenCalled();
     });
   });
 
-  describe('findAllPublic()', () => {
-    it('should return only published events', async () => {
-      const events = [
-        { title: 'Event 1', status: EventStatus.PUBLISHED },
-        { title: 'Event 2', status: EventStatus.PUBLISHED },
-      ];
+  describe('login', () => {
+    const loginCredentials = {
+      email: 'john@example.com',
+      password: 'password123',
+    };
 
-      mockEventModel.find.mockReturnValue({
-        sort: jest.fn().mockResolvedValue(events),
+    const mockUser = {
+      _id: 'user123',
+      fullName: 'John Doe',
+      email: loginCredentials.email,
+      password: 'hashedPassword123',
+      roles: [Role.PARTICIPANT],
+    };
+
+    it('should successfully login with valid credentials', async () => {
+      const mockToken = 'jwt-token-123';
+
+      mockUsersService.findByEmail.mockResolvedValue(mockUser);
+      mockedBcrypt.compare.mockResolvedValue(true as never);
+      mockJwtService.sign.mockReturnValue(mockToken);
+
+      const result = await authService.login(loginCredentials.email, loginCredentials.password);
+
+      expect(mockUsersService.findByEmail).toHaveBeenCalledWith(loginCredentials.email);
+      expect(mockedBcrypt.compare).toHaveBeenCalledWith(loginCredentials.password, mockUser.password);
+      expect(mockJwtService.sign).toHaveBeenCalledWith({
+        sub: mockUser._id,
+        email: mockUser.email,
+        roles: mockUser.roles,
       });
-
-      const result = await service.findAllPublic();
-
-      expect(mockEventModel.find).toHaveBeenCalledWith({
-        status: EventStatus.PUBLISHED,
+      expect(result).toEqual({
+        access_token: mockToken,
+        user: {
+          _id: mockUser._id,
+          fullName: mockUser.fullName,
+          email: mockUser.email,
+          roles: mockUser.roles,
+        },
       });
-
-      expect(result.length).toBe(2);
-      expect(result[0].status).toBe(EventStatus.PUBLISHED);
-    });
-  });
-
-  describe('findById()', () => {
-    it('should return event if exists', async () => {
-      const event = { _id: '123', title: 'Event test' };
-
-      mockEventModel.findById.mockResolvedValue(event);
-
-      const result = await service.findById('123');
-
-      expect(mockEventModel.findById).toHaveBeenCalledWith('123');
-      expect(result).toEqual(event);
     });
 
-    it('should throw NotFoundException if event not found', async () => {
-      mockEventModel.findById.mockResolvedValue(null);
-
-      await expect(service.findById('999')).rejects.toThrow(NotFoundException);
-    });
-  });
-
-  describe('update()', () => {
-    it('should update event if status is not canceled', async () => {
-      const event = {
-        _id: '123',
-        title: 'Old Title',
-        status: EventStatus.DRAFT,
-        save: jest.fn().mockResolvedValue({
-          title: 'New Title',
-          status: EventStatus.DRAFT,
-        }),
-      };
-
-      jest.spyOn(service, 'findById').mockResolvedValue(event as any);
-
-      const result = await service.update('123', { title: 'New Title' } as any);
-
-      expect(event.save).toHaveBeenCalled();
-      expect(result.title).toBe('New Title');
-    });
-
-    it('should throw BadRequestException if event is canceled', async () => {
-      const event = {
-        _id: '123',
-        status: EventStatus.CANCELED,
-      };
-
-      jest.spyOn(service, 'findById').mockResolvedValue(event as any);
+    it('should throw BadRequestException for non-existent user', async () => {
+      mockUsersService.findByEmail.mockResolvedValue(null);
 
       await expect(
-        service.update('123', { title: 'New Title' } as any),
+        authService.login(loginCredentials.email, loginCredentials.password),
       ).rejects.toThrow(BadRequestException);
+      await expect(
+        authService.login(loginCredentials.email, loginCredentials.password),
+      ).rejects.toThrow('email ou mot de passe incorect');
+
+      expect(mockUsersService.findByEmail).toHaveBeenCalledWith(loginCredentials.email);
+      expect(mockedBcrypt.compare).not.toHaveBeenCalled();
+    });
+
+    it('should throw BadRequestException for incorrect password', async () => {
+      mockUsersService.findByEmail.mockResolvedValue(mockUser);
+      mockedBcrypt.compare.mockResolvedValue(false as never);
+
+      await expect(
+        authService.login(loginCredentials.email, loginCredentials.password),
+      ).rejects.toThrow(BadRequestException);
+      await expect(
+        authService.login(loginCredentials.email, loginCredentials.password),
+      ).rejects.toThrow('email ou mot de incorrecte ');
+
+      expect(mockUsersService.findByEmail).toHaveBeenCalledWith(loginCredentials.email);
+      expect(mockedBcrypt.compare).toHaveBeenCalledWith(loginCredentials.password, mockUser.password);
+    });
+
+    it('should handle admin user login', async () => {
+      const adminUser = {
+        ...mockUser,
+        roles: [Role.ADMIN],
+      };
+
+      const mockToken = 'admin-jwt-token-123';
+
+      mockUsersService.findByEmail.mockResolvedValue(adminUser);
+      mockedBcrypt.compare.mockResolvedValue(true as never);
+      mockJwtService.sign.mockReturnValue(mockToken);
+
+      const result = await authService.login(loginCredentials.email, loginCredentials.password);
+
+      expect(mockJwtService.sign).toHaveBeenCalledWith({
+        sub: adminUser._id,
+        email: adminUser.email,
+        roles: adminUser.roles,
+      });
+      expect(result.user.roles).toEqual([Role.ADMIN]);
     });
   });
 
-  describe('publish()', () => {
-    it('should publish event if not canceled', async () => {
-      const event = {
-        _id: '123',
-        status: EventStatus.DRAFT,
-        save: jest.fn().mockResolvedValue({
-          status: EventStatus.PUBLISHED,
-        }),
-      };
-
-      jest.spyOn(service, 'findById').mockResolvedValue(event as any);
-
-      const result = await service.publish('123');
-
-      expect(event.status).toBe(EventStatus.PUBLISHED);
-      expect(event.save).toHaveBeenCalled();
-      expect(result.status).toBe(EventStatus.PUBLISHED);
-    });
-
-    it('should throw BadRequestException if event is canceled', async () => {
-      const event = {
-        _id: '123',
-        status: EventStatus.CANCELED,
-      };
-
-      jest.spyOn(service, 'findById').mockResolvedValue(event as any);
-
-      await expect(service.publish('123')).rejects.toThrow(BadRequestException);
-    });
-  });
-
-  describe('cancel()', () => {
-    it('should cancel event', async () => {
-      const event = {
-        _id: '123',
-        status: EventStatus.PUBLISHED,
-        save: jest.fn().mockResolvedValue({
-          status: EventStatus.CANCELED,
-        }),
-      };
-
-      jest.spyOn(service, 'findById').mockResolvedValue(event as any);
-
-      const result = await service.cancel('123');
-
-      expect(event.status).toBe(EventStatus.CANCELED);
-      expect(event.save).toHaveBeenCalled();
-      expect(result.status).toBe(EventStatus.CANCELED);
-    });
-  });
-
-  describe('remove()', () => {
-    it('should delete event', async () => {
-      const event = {
-        _id: '123',
-        deleteOne: jest.fn().mockResolvedValue(true),
-      };
-
-      jest.spyOn(service, 'findById').mockResolvedValue(event as any);
-
-      const result = await service.remove('123');
-
-      expect(event.deleteOne).toHaveBeenCalled();
-      expect(result.message).toBe('Event deleted successfully');
-    });
+  it('should be defined', () => {
+    expect(authService).toBeDefined();
   });
 });

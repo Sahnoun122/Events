@@ -21,11 +21,19 @@ export class AuthService {
      }
      const hashPassword = await bcrypt.hash(body.password , 10);
 
+     // Gérer le cas où roles est une chaîne au lieu d'un tableau
+     let userRoles;
+     if (body.roles) {
+       userRoles = Array.isArray(body.roles) ? body.roles : [body.roles];
+     } else {
+       userRoles = [Role.PARTICIPANT];
+     }
+
      const newUser = await this.userService.create({
         fullName: body.fullName,
         email: body.email,
         password:hashPassword,
-        roles: body.roles || [Role.PARTICIPANT]
+        roles: userRoles
      });
 
      return {

@@ -1,0 +1,49 @@
+# Dépendances
+node_modules
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Builds Next.js
+.next/
+out/
+build/
+
+# Cache
+.eslintcache
+.cache/
+
+# Logs
+logs
+*.log
+
+# Environnement
+.env
+.env.local
+.env.*.local
+
+# IDE
+.vscode/
+.idea/
+
+# Git
+.git/
+.gitignore
+
+# Documentation
+README.md
+*.md
+
+# Docker
+Dockerfile*
+docker-compose*
+.dockerignore
+
+# Tests
+__tests__/
+*.test.*
+*.spec.*
+
+# Autres
+.DS_Store
+Thumbs.db

@@ -1,5 +1,9 @@
 # 🎪 Events App
 
+[![CI/CD Pipeline](https://github.com/username/events-app/actions/workflows/ci.yml/badge.svg)](https://github.com/username/events-app/actions/workflows/ci.yml)
+[![Deploy](https://github.com/username/events-app/actions/workflows/deploy.yml/badge.svg)](https://github.com/username/events-app/actions/workflows/deploy.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
 Application de gestion d'événements avec NestJS (backend) et Next.js (frontend).
 
 ## 🏗️ Structure du Projet
@@ -210,7 +214,51 @@ docker-compose restart mongodb
 docker-compose logs mongodb
 ```
 
-## 📦 Technologies
+## � CI/CD Pipeline
+
+Le projet inclut une pipeline GitHub Actions complète avec :
+
+### Déclenchement Automatique
+- ✅ À chaque **push** sur `main`, `master`, `develop`
+- ✅ À chaque **pull request** vers ces branches
+
+### Jobs Exécutés
+
+#### 🎯 Backend
+- **Install & Cache** : Installation des dépendances avec mise en cache
+- **Lint** : ESLint avec niveau strict
+- **Tests** : Tests unitaires et e2e
+- **Build** : Compilation TypeScript/NestJS
+
+#### 🎯 Frontend
+- **Install & Cache** : Installation des dépendances avec mise en cache  
+- **Lint** : ESLint Next.js avec niveau strict
+- **Type Check** : Vérification TypeScript
+- **Build** : Build Next.js avec optimisations
+
+#### 🐳 Docker
+- **Build Test** : Test des builds Docker
+- **Compose Validation** : Validation docker-compose
+
+#### 🔒 Sécurité
+- **Audit** : Analyse des vulnérabilités npm
+
+### ⚠️ Échecs de Pipeline
+
+La pipeline **échoue automatiquement** si :
+- ❌ **Lint** échoue (erreurs de style/qualité)
+- ❌ **Tests** échouent (unitaires ou e2e)  
+- ❌ **Build** échoue (erreurs de compilation)
+- ❌ **Security audit** détecte des vulnérabilités critiques
+
+### 📋 Status Badges
+
+Les badges en haut du README indiquent l'état actuel :
+- 🟢 **Vert** : Tout fonctionne
+- 🔴 **Rouge** : Pipeline en échec
+- 🟡 **Jaune** : En cours d'exécution
+
+## �📦 Technologies
 
 - **Backend** : NestJS, TypeScript, MongoDB, JWT
 - **Frontend** : Next.js, React, TypeScript, Tailwind CSS

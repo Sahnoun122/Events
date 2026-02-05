@@ -21,7 +21,6 @@ export class AuthService {
      }
      const hashPassword = await bcrypt.hash(body.password , 10);
 
-     // Gérer le cas où roles est une chaîne au lieu d'un tableau
      let userRoles;
      if (body.roles) {
        userRoles = Array.isArray(body.roles) ? body.roles : [body.roles];

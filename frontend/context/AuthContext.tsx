@@ -54,11 +54,11 @@ export  function AuthProvider({ children } : {children : ReactNode}){
         });
 
         const data = await  res.json();
-        localStorage.setItem("auth" , JSON.stringify({data}))
-
-        setUser(data.user);
-
-        redirectByRole(data.user.roles);
+        // Ne pas sauvegarder l'utilisateur après l'inscription
+        // L'utilisateur doit se connecter manuellement
+        
+        // Rediriger vers la page de connexion
+        router.push("/auth/login");
     } 
 
       const redirectByRole = (roles: string[]) => {

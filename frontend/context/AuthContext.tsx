@@ -7,7 +7,7 @@ interface User {
   id?: string;
   fullName: string;
   email: string;
-  role: 'admin' | 'participant' | 'organizer';
+  role: 'admin' | 'participant';
   avatar?: string;
   createdAt?: string;
 }
@@ -22,6 +22,8 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
@@ -30,16 +32,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const initAuth = () => {
       try {
-        const store = localStorage.getItem("auth");
-        if (store) {
-          const authData = JSON.parse(store);
-          if (authData.user) {
-            setUser(authData.user);
+        const authData = localStorage.getItem("auth");
+        if (authData) {
+          const parsed = JSON.parse(authData);
+          // Vérifier si le token n'a pas expiré
+          if (parsed.expiresAt && new Date(parsed.expiresAt) > new Date()) {
+            setUser(parsed.user);
+          } else {
+            localStorage.removeItem("auth");
+            localStorage.removeItem("token");
           }
         }
       } catch (error) {
-        console.error('Erreur lors de la récupération des données d\'authentification:', error);
+        console.error('Erreur lors de l\'initialisation:', error);
         localStorage.removeItem("auth");
+        localStorage.removeItem("token");
       } finally {
         setIsLoading(false);
       }
@@ -52,31 +59,46 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       setIsLoading(true);
       
-      // Simulation d'une API - à remplacer par votre vraie API
-      const mockUser: User = {
-        id: '1',
-        fullName: email === 'admin@admin.com' ? 'Administrateur' : 'Utilisateur Test',
-        email: email,
-        role: email === 'admin@admin.com' ? 'admin' : 'participant',
-        avatar: undefined,
-        createdAt: new Date().toISOString()
+      const response = await fetch(`${API_URL}/auth/login`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || 'Identifiants invalides');
+      }
+
+      const data = await response.json();
+      
+      // Adapter le format de réponse du backend
+      const userData: User = {
+        id: data.user._id,
+        fullName: data.user.fullName,
+        email: data.user.email,
+        role: data.user.roles[0] === 'admin' ? 'admin' : 'participant',
       };
 
+      // Sauvegarder les données d'authentification
       const authData = {
-        user: mockUser,
-        token: 'mock-jwt-token',
+        user: userData,
+        token: data.access_token,
         expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString() // 24h
       };
 
-      localStorage.setItem("auth", JSON.stringify(authData));
-      setUser(mockUser);
+      localStorage.setItem('auth', JSON.stringify(authData));
+      localStorage.setItem('token', data.access_token);
+      setUser(userData);
       
       // Redirection automatique selon le rôle
-      redirectByRole(mockUser.role);
+      redirectByRole(userData.role);
       
     } catch (error) {
       console.error('Erreur lors de la connexion:', error);
-      throw new Error('Identifiants invalides');
+      throw new Error(error instanceof Error ? error.message : 'Identifiants invalides');
     } finally {
       setIsLoading(false);
     }
@@ -86,22 +108,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       setIsLoading(true);
       
-      // Simulation d'une API - à remplacer par votre vraie API
-      console.log('Inscription:', { fullName, email, password });
-      
+      const response = await fetch(`${API_URL}/auth/register`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ fullName, email, password }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || 'Erreur lors de l\'inscription');
+      }
+
       // Redirection vers la page de connexion après inscription
       router.push("/auth/login?message=Inscription réussie ! Veuillez vous connecter.");
       
     } catch (error) {
       console.error('Erreur lors de l\'inscription:', error);
-      throw new Error('Erreur lors de l\'inscription');
+      throw new Error(error instanceof Error ? error.message : 'Erreur lors de l\'inscription');
     } finally {
       setIsLoading(false);
     }
   };
 
   const logout = () => {
-    localStorage.removeItem("auth");
+    localStorage.removeItem('auth');
+    localStorage.removeItem('token');
     setUser(null);
     router.push("/auth/login");
   };
@@ -109,12 +142,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const redirectByRole = (role: string) => {
     if (role === "admin") {
       router.push("/dashboard/admin");
-    } else if (role === "participant") {
-      router.push("/dashboard/participant");
-    } else if (role === "organizer") {
-      router.push("/dashboard/organizer");
     } else {
-      router.push("/dashboard/participant"); // Par défaut
+      router.push("/dashboard/participant"); // Par défaut pour participant
     }
   };
 

@@ -123,36 +123,42 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 <span>Tableau de bord</span>
               </Link>
 
-              <Link
-                href="/dashboard/events"
-                className="flex items-center space-x-3 px-4 py-3 text-primary-700 hover:text-primary-800 hover:bg-primary-100 rounded-lg font-medium transition-colors"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                </svg>
-                <span>Événements</span>
-              </Link>
+              {/* Navigation pour les participants */}
+              {user.role === 'participant' && (
+                <>
+                  <Link
+                    href="/dashboard/participant/events"
+                    className="flex items-center space-x-3 px-4 py-3 text-primary-700 hover:text-primary-800 hover:bg-primary-100 rounded-lg font-medium transition-colors"
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                    <span>Événements</span>
+                  </Link>
 
-              <Link
-                href="/dashboard/reservations"
-                className="flex items-center space-x-3 px-4 py-3 text-primary-700 hover:text-primary-800 hover:bg-primary-100 rounded-lg font-medium transition-colors"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                </svg>
-                <span>Réservations</span>
-              </Link>
+                  <Link
+                    href="/dashboard/participant/reservations"
+                    className="flex items-center space-x-3 px-4 py-3 text-primary-700 hover:text-primary-800 hover:bg-primary-100 rounded-lg font-medium transition-colors"
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                    </svg>
+                    <span>Mes Réservations</span>
+                  </Link>
 
-              <Link
-                href="/dashboard/analytics"
-                className="flex items-center space-x-3 px-4 py-3 text-primary-700 hover:text-primary-800 hover:bg-primary-100 rounded-lg font-medium transition-colors"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                </svg>
-                <span>Analytics</span>
-              </Link>
+                  <Link
+                    href="/dashboard/participant/tickets"
+                    className="flex items-center space-x-3 px-4 py-3 text-primary-700 hover:text-primary-800 hover:bg-primary-100 rounded-lg font-medium transition-colors"
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                    </svg>
+                    <span>Mes Tickets</span>
+                  </Link>
+                </>
+              )}
 
+              {/* Navigation pour les admins */}
               {user.role === 'admin' && (
                 <>
                   <hr className="my-4 border-primary-200" />
@@ -161,6 +167,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                       Administration
                     </h3>
                   </div>
+                  
                   <Link
                     href="/dashboard/admin"
                     className="flex items-center space-x-3 px-4 py-3 text-primary-700 hover:text-primary-800 hover:bg-primary-100 rounded-lg font-medium transition-colors"
@@ -168,7 +175,47 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
                     </svg>
-                    <span>Gestion Admin</span>
+                    <span>Vue d'ensemble</span>
+                  </Link>
+
+                  <Link
+                    href="/dashboard/admin/events"
+                    className="flex items-center space-x-3 px-4 py-3 text-primary-700 hover:text-primary-800 hover:bg-primary-100 rounded-lg font-medium transition-colors"
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                    <span>Gestion Événements</span>
+                  </Link>
+
+                  <Link
+                    href="/dashboard/admin/reservations"
+                    className="flex items-center space-x-3 px-4 py-3 text-primary-700 hover:text-primary-800 hover:bg-primary-100 rounded-lg font-medium transition-colors"
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                    </svg>
+                    <span>Gestion Réservations</span>
+                  </Link>
+
+                  <Link
+                    href="/dashboard/admin/users"
+                    className="flex items-center space-x-3 px-4 py-3 text-primary-700 hover:text-primary-800 hover:bg-primary-100 rounded-lg font-medium transition-colors"
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
+                    </svg>
+                    <span>Gestion Utilisateurs</span>
+                  </Link>
+
+                  <Link
+                    href="/dashboard/admin/statistics"
+                    className="flex items-center space-x-3 px-4 py-3 text-primary-700 hover:text-primary-800 hover:bg-primary-100 rounded-lg font-medium transition-colors"
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                    </svg>
+                    <span>Statistiques</span>
                   </Link>
                 </>
               )}

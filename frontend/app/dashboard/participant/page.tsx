@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
 
 export default function ParticipantDashboard() {
@@ -186,8 +187,10 @@ export default function ParticipantDashboard() {
                   </div>
                 ))}
               </div>
-              <button className="w-full mt-4 btn-secondary text-center">
-                Voir toutes mes réservations
+              <button className="w-full btn-secondary text-center">
+                <Link href="/dashboard/participant/reservations">
+                  Voir toutes mes réservations
+                </Link>
               </button>
             </div>
 
@@ -219,8 +222,10 @@ export default function ParticipantDashboard() {
                   </div>
                 ))}
               </div>
-              <button className="w-full mt-4 btn-secondary text-center">
-                Explorer tous les événements
+              <button className="w-full btn-secondary text-center">
+                <Link href="/dashboard/participant/events">
+                  Explorer tous les événements
+                </Link>
               </button>
             </div>
           </div>
@@ -288,7 +293,9 @@ export default function ParticipantDashboard() {
                       <span>{event.spots} places restantes</span>
                     </div>
                   </div>
-                  
+                  Link href={`/dashboard/participant/events/${event.id}`} className="flex-1 btn-primary text-sm text-center">
+                      Réserver
+                    </Link
                   <div className="flex space-x-2">
                     <button className="flex-1 btn-primary text-sm">Réserver</button>
                     <button className="px-3 py-2 border border-primary-200 rounded-lg text-primary-600 hover:text-primary-800 hover:bg-primary-50 text-sm">
@@ -356,8 +363,12 @@ export default function ParticipantDashboard() {
                       </div>
                     </div>
                   </div>
-                  
-                  <div className="flex flex-col space-y-2">
+                  Link href={`/dashboard/participant/reservations/${reservation.id}`} className="btn-primary text-sm text-center">
+                      Voir détails
+                    </Link>
+                    <Link href={`/dashboard/participant/reservations/${reservation.id}/ticket`} className="btn-secondary text-sm text-center">
+                      Télécharger ticket
+                    </Link
                     <button className="btn-primary text-sm">Voir détails</button>
                     <button className="btn-secondary text-sm">Télécharger ticket</button>
                     {reservation.status === 'confirmed' && (

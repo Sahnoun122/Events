@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
 
@@ -110,7 +111,9 @@ export default function AdminDashboard() {
             <div className="glass-effect p-6 rounded-2xl">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-xl font-bold text-primary-800">Événements récents</h2>
-                <button className="btn-secondary text-sm">Voir tous</button>
+              <Link href="/dashboard/admin/events" className="btn-secondary text-sm">
+                Voir tous
+              </Link>
               </div>
               <div className="space-y-4">
                 {recentEvents.map((event) => (
@@ -140,7 +143,9 @@ export default function AdminDashboard() {
             <div className="glass-effect p-6 rounded-2xl">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-xl font-bold text-primary-800">Nouveaux utilisateurs</h2>
-                <button className="btn-secondary text-sm">Gérer</button>
+              <Link href="/dashboard/admin/users" className="btn-secondary text-sm">
+                Gérer
+              </Link>
               </div>
               <div className="space-y-4">
                 {recentUsers.map((user) => (
@@ -180,11 +185,9 @@ export default function AdminDashboard() {
             <h2 className="text-xl font-bold text-primary-800">Gestion des événements</h2>
             <div className="flex space-x-2">
               <button className="btn-secondary text-sm">Filtrer</button>
-              <button className="btn-primary text-sm">➕ Nouvel événement</button>
-            </div>
-          </div>
-          
-          <div className="bg-white rounded-lg overflow-hidden border border-primary-200">
+                <Link href="/dashboard/admin/events/create" className="btn-primary text-sm">
+                  ➕ Nouvel événement
+                </Link>
             <table className="w-full">
               <thead className="bg-primary-50">
                 <tr>
@@ -219,8 +222,12 @@ export default function AdminDashboard() {
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex space-x-2">
-                        <button className="text-primary-600 hover:text-primary-800 text-sm">Voir</button>
-                        <button className="text-blue-600 hover:text-blue-800 text-sm">Modifier</button>
+                        <Link href={`/dashboard/admin/events/${event.id}`} className="text-primary-600 hover:text-primary-800 text-sm">
+                          Voir
+                        </Link>
+                        <Link href={`/dashboard/admin/events/${event.id}/edit`} className="text-blue-600 hover:text-blue-800 text-sm">
+                          Modifier
+                        </Link>
                         <button className="text-red-600 hover:text-red-800 text-sm">Supprimer</button>
                       </div>
                     </td>
@@ -266,8 +273,12 @@ export default function AdminDashboard() {
                         }`}>
                           {user.role === 'organizer' ? 'Organisateur' : 'Participant'}
                         </span>
-                      </div>
-                    </div>
+                     Link href="/dashboard/admin/reservations" className="btn-secondary text-sm">
+                      Profil
+                    </Link>
+                    <Link href={`/dashboard/admin/users/${user.id}`} className="text-primary-600 hover:text-primary-800 text-sm">
+                      Modifier
+                    </Link
                   </div>
                   <div className="flex space-x-2">
                     <button className="btn-secondary text-sm">Profil</button>

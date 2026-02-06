@@ -21,7 +21,7 @@ export class TicketsController {
   ) {
     const pdfBuffer = await this.ticketsService.generateTicketPDF(
       reservationId,
-      user._id,
+      user.id,
     );
 
     res.set({

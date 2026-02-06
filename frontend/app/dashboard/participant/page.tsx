@@ -4,10 +4,12 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
+import { ticketsService } from "@/services/ticketsService";
 
 export default function ParticipantDashboard() {
   const { user, isLoading } = useAuth();
   const [activeTab, setActiveTab] = useState("dashboard");
+  const [downloadingId, setDownloadingId] = useState<string | null>(null);
   const router = useRouter();
 
   // Protection de la page participant
@@ -23,6 +25,17 @@ export default function ParticipantDashboard() {
       }
     }
   }, [user, isLoading, router]);
+
+  const handleDownloadTicket = async (reservationId: string) => {
+    try {
+      setDownloadingId(reservationId);
+      await ticketsService.downloadTicket(reservationId);
+    } catch (error: any) {
+      alert(`Erreur lors du téléchargement : ${error.message}`);
+    } finally {
+      setDownloadingId(null);
+    }
+  };
 
   // Afficher le loader pendant la vérification
   if (isLoading || !user || user.role === 'admin') {
@@ -356,12 +369,20 @@ export default function ParticipantDashboard() {
                     Voir détails
                   </Link>
                   {reservation.status === 'confirmed' && (
-                    <Link 
-                      href={`/dashboard/participant/reservations/${reservation.id}/ticket`}
-                      className="btn-primary text-sm"
+                    <button
+                      onClick={() => handleDownloadTicket(reservation.id)}
+                      disabled={downloadingId === reservation.id}
+                      className="bg-blue-600 text-white hover:bg-blue-700 px-4 py-2 rounded-lg text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      📱 Télécharger ticket
-                    </Link>
+                      {downloadingId === reservation.id ? (
+                        <div className="flex items-center space-x-1">
+                          <div className="w-3 h-3 border border-white border-t-transparent rounded-full animate-spin"></div>
+                          <span>Téléchargement...</span>
+                        </div>
+                      ) : (
+                        '📱 Télécharger ticket PDF'
+                      )}
+                    </button>
                   )}
                   <button className="text-red-600 hover:text-red-800 text-sm px-3 py-1">
                     Annuler

@@ -114,7 +114,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           <nav className="p-6">
             <div className="space-y-2">
               <Link
-                href="/dashboard"
+                href={user?.role === 'admin' ? '/dashboard/admin' : '/dashboard/participant'}
                 className="flex items-center space-x-3 px-4 py-3 text-primary-700 hover:text-primary-800 hover:bg-primary-100 rounded-lg font-medium transition-colors"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

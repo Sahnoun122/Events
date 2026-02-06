@@ -1,15 +1,45 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
+import { useRouter } from "next/navigation";
 
 export default function ParticipantDashboard() {
-  const { user } = useAuth();
+  const { user, isLoading } = useAuth();
   const [activeTab, setActiveTab] = useState("dashboard");
+  const router = useRouter();
 
-  if (!user) {
-    return null;
+  // Protection de la page participant
+  useEffect(() => {
+    if (!isLoading && !user) {
+      router.push('/auth/login');
+      return;
+    }
+  }, [user, isLoading, router]);
+
+  // Afficher le loader pendant la vérification
+  if (isLoading || !user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-50 to-white">
+        <div className="text-center space-y-4">
+          <div className="w-16 h-16 mx-auto bg-gradient-to-br from-primary-200 to-primary-300 rounded-full flex items-center justify-center">
+            <span className="text-2xl font-bold text-primary-800">🎟️</span>
+          </div>
+          <div className="flex space-x-2 justify-center">
+            <div className="w-3 h-3 bg-primary-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
+            <div className="w-3 h-3 bg-primary-500 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
+            <div className="w-3 h-3 bg-primary-600 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+          </div>
+          <div className="space-y-2">
+            <h2 className="text-xl font-semibold text-primary-800">Espace Participant</h2>
+            <p className="text-primary-600">
+              {isLoading ? "Chargement de votre espace..." : "Connexion requise"}
+            </p>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   const myReservations = [
@@ -98,38 +128,30 @@ export default function ParticipantDashboard() {
               Salut {user.fullName?.split(' ')[0]} ! 👋
             </h1>
             <p className="text-primary-600">
-              Découvrez des événements passionnants et gérez vos réservations
+              Découvrez vos prochains événements et gérez vos réservations
             </p>
           </div>
-          <div className="flex space-x-2">
-            <button className="btn-primary text-sm">
-              🔍 Découvrir
-            </button>
-            <button className="btn-secondary text-sm">
-              ⭐ Favoris
-            </button>
-          </div>
+          <div className="text-4xl">🎟️</div>
         </div>
-        
+
         {/* Navigation par onglets */}
-        <div className="flex space-x-1 p-1 bg-primary-100 rounded-lg">
+        <div className="flex space-x-1 bg-primary-100 p-1 rounded-xl mb-6">
           {[
-            { id: "dashboard", label: "Tableau de bord", icon: "🏠" },
-            { id: "events", label: "Événements", icon: "🎯" },
-            { id: "reservations", label: "Mes Réservations", icon: "🎫" },
-            { id: "profile", label: "Profil", icon: "👤" }
+            { key: "dashboard", label: "🏠 Accueil", icon: "🏠" },
+            { key: "events", label: "🎪 Événements", icon: "🎪" },
+            { key: "reservations", label: "🎫 Réservations", icon: "🎫" },
+            { key: "profile", label: "👤 Profil", icon: "👤" }
           ].map((tab) => (
             <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`flex items-center space-x-2 px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                activeTab === tab.id
+              key={tab.key}
+              onClick={() => setActiveTab(tab.key)}
+              className={`flex-1 py-2 px-4 text-sm font-medium rounded-lg transition-all duration-200 ${
+                activeTab === tab.key
                   ? 'bg-white text-primary-800 shadow-sm'
-                  : 'text-primary-600 hover:text-primary-800 hover:bg-primary-50'
+                  : 'text-primary-600 hover:text-primary-800'
               }`}
             >
-              <span>{tab.icon}</span>
-              <span>{tab.label}</span>
+              {tab.icon} {tab.label.split(' ')[1]}
             </button>
           ))}
         </div>
@@ -137,174 +159,119 @@ export default function ParticipantDashboard() {
 
       {/* Contenu selon l'onglet actif */}
       {activeTab === "dashboard" && (
-        <>
+        <div className="space-y-6">
           {/* Statistiques personnelles */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {[
-              { title: "Mes Réservations", value: myReservations.length.toString(), icon: "🎫", color: "bg-green-50 text-green-600" },
-              { title: "Événements Suivis", value: "8", icon: "⭐", color: "bg-yellow-50 text-yellow-600" },
-              { title: "Points Fidélité", value: "1,245", icon: "🏆", color: "bg-purple-50 text-purple-600" }
-            ].map((stat, index) => (
-              <div key={index} className="glass-effect p-6 rounded-2xl hover:shadow-lg transition-shadow">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-primary-600">{stat.title}</p>
-                    <p className="text-2xl font-bold text-primary-800 mt-1">{stat.value}</p>
-                  </div>
-                  <div className={`p-3 rounded-full ${stat.color}`}>
-                    <span className="text-2xl">{stat.icon}</span>
-                  </div>
-                </div>
+            <div className="glass-effect p-6 rounded-2xl text-center">
+              <div className="text-3xl mb-2">🎯</div>
+              <div className="text-2xl font-bold text-primary-800">{myReservations.length}</div>
+              <p className="text-primary-600">Événements réservés</p>
+            </div>
+            <div className="glass-effect p-6 rounded-2xl text-center">
+              <div className="text-3xl mb-2">✅</div>
+              <div className="text-2xl font-bold text-green-600">
+                {myReservations.filter(r => r.status === 'confirmed').length}
               </div>
-            ))}
+              <p className="text-primary-600">Confirmées</p>
+            </div>
+            <div className="glass-effect p-6 rounded-2xl text-center">
+              <div className="text-3xl mb-2">⏳</div>
+              <div className="text-2xl font-bold text-orange-600">
+                {myReservations.filter(r => r.status === 'pending').length}
+              </div>
+              <p className="text-primary-600">En attente</p>
+            </div>
           </div>
 
-          {/* Prochains événements et recommandations */}
-          <div className="grid lg:grid-cols-2 gap-6">
-            {/* Mes prochains événements */}
-            <div className="glass-effect p-6 rounded-2xl">
-              <h2 className="text-xl font-bold text-primary-800 mb-4">Mes prochains événements</h2>
-              <div className="space-y-4">
-                {myReservations.filter(r => r.status === 'confirmed').slice(0, 2).map((reservation) => (
-                  <div key={reservation.id} className="bg-white p-4 rounded-lg border border-primary-200 hover:shadow-sm transition-shadow">
-                    <div className="flex items-center justify-between">
-                      <div className="flex-1">
-                        <h3 className="font-semibold text-primary-800">{reservation.eventTitle}</h3>
-                        <div className="grid grid-cols-2 gap-2 mt-2 text-sm text-primary-600">
-                          <span>📅 {new Date(reservation.date).toLocaleDateString('fr-FR')}</span>
-                          <span>🕐 {reservation.time}</span>
-                          <span>📍 {reservation.location}</span>
-                          <span>🎫 {reservation.ticketNumber}</span>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <span className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-xs font-medium">
-                          Confirmé
-                        </span>
-                        <p className="text-xs text-primary-500 mt-2">par {reservation.organizer}</p>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-              <button className="w-full btn-secondary text-center">
-                <Link href="/dashboard/participant/reservations">
-                  Voir toutes mes réservations
-                </Link>
-              </button>
+          {/* Événements recommandés */}
+          <div className="glass-effect p-6 rounded-2xl">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-xl font-bold text-primary-800">Événements recommandés pour vous</h2>
+              <Link href="/dashboard/participant/events" className="btn-secondary text-sm">
+                Voir tous
+              </Link>
             </div>
-
-            {/* Recommandations personnalisées */}
-            <div className="glass-effect p-6 rounded-2xl">
-              <h2 className="text-xl font-bold text-primary-800 mb-4">Recommandations pour vous</h2>
-              <div className="space-y-4">
-                {availableEvents.slice(0, 2).map((event) => (
-                  <div key={event.id} className="bg-white p-4 rounded-lg border border-primary-200 hover:shadow-sm transition-shadow">
-                    <div className="flex items-center justify-between">
-                      <div className="flex-1">
-                        <div className="flex items-center space-x-2 mb-1">
-                          <h3 className="font-semibold text-primary-800">{event.title}</h3>
-                          <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs">
-                            {event.category}
-                          </span>
-                        </div>
-                        <div className="grid grid-cols-2 gap-2 text-sm text-primary-600">
-                          <span>📅 {new Date(event.date).toLocaleDateString('fr-FR')}</span>
-                          <span>💰 {event.price}</span>
-                          <span>📍 {event.location}</span>
-                          <span>👥 {event.spots} places restantes</span>
-                        </div>
-                      </div>
-                      <button className="btn-primary text-sm">
-                        Réserver
-                      </button>
-                    </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {availableEvents.slice(0, 3).map((event) => (
+                <div key={event.id} className="bg-white p-4 rounded-xl border border-primary-200 hover:shadow-md transition-shadow">
+                  <div className="flex items-start justify-between mb-3">
+                    <span className="text-xs bg-primary-100 text-primary-800 px-2 py-1 rounded-full">
+                      {event.category}
+                    </span>
+                    <span className="text-sm font-semibold text-primary-800">{event.price}</span>
                   </div>
-                ))}
-              </div>
-              <button className="w-full btn-secondary text-center">
-                <Link href="/dashboard/participant/events">
-                  Explorer tous les événements
-                </Link>
-              </button>
+                  <h3 className="font-semibold text-primary-800 mb-2">{event.title}</h3>
+                  <p className="text-xs text-primary-600 mb-1">📅 {event.date} à {event.time}</p>
+                  <p className="text-xs text-primary-600 mb-1">📍 {event.location}</p>
+                  <p className="text-xs text-primary-600 mb-3">👥 {event.spots} places restantes</p>
+                  <Link href={`/dashboard/participant/events/${event.id}`} className="btn-primary text-xs w-full">
+                    Voir détails
+                  </Link>
+                </div>
+              ))}
             </div>
           </div>
 
           {/* Catégories favorites */}
           <div className="glass-effect p-6 rounded-2xl">
-            <h2 className="text-xl font-bold text-primary-800 mb-4">Vos catégories préférées</h2>
+            <h2 className="text-xl font-bold text-primary-800 mb-6">Vos catégories préférées</h2>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {favoriteCategories.map((category) => (
-                <div key={category.name} className="bg-white p-4 rounded-lg border border-primary-200 text-center hover:shadow-sm transition-shadow cursor-pointer">
-                  <div className="text-3xl mb-2">{category.icon}</div>
-                  <h3 className="font-medium text-primary-800">{category.name}</h3>
+              {favoriteCategories.map((category, index) => (
+                <div key={index} className="bg-white p-4 rounded-xl border border-primary-200 text-center">
+                  <div className="text-2xl mb-2">{category.icon}</div>
+                  <h3 className="font-semibold text-primary-800">{category.name}</h3>
                   <p className="text-sm text-primary-600">{category.count} événements</p>
                 </div>
               ))}
             </div>
           </div>
-        </>
+        </div>
       )}
 
       {activeTab === "events" && (
-        <div className="space-y-6">
-          <div className="glass-effect p-6 rounded-2xl">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-bold text-primary-800">Événements disponibles</h2>
-              <div className="flex space-x-2">
-                <select className="px-4 py-2 border border-primary-200 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm">
-                  <option>Toutes catégories</option>
-                  <option>Technologie</option>
-                  <option>Business</option>
-                  <option>Design</option>
-                  <option>Marketing</option>
-                </select>
-                <button className="btn-secondary text-sm">Filtrer</button>
-              </div>
+        <div className="glass-effect p-6 rounded-2xl">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-xl font-bold text-primary-800">Parcourir les événements</h2>
+            <div className="flex space-x-2">
+              <button className="btn-secondary text-sm">Filtrer</button>
+              <Link href="/dashboard/participant/events" className="btn-primary text-sm">
+                Voir tous les événements
+              </Link>
             </div>
-            
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {availableEvents.map((event) => (
-                <div key={event.id} className="bg-white p-6 rounded-lg border border-primary-200 hover:shadow-lg transition-shadow">
-                  <div className="flex items-center justify-between mb-3">
-                    <span className="px-3 py-1 bg-primary-100 text-primary-800 rounded-full text-xs font-medium">
-                      {event.category}
-                    </span>
-                    <span className="text-lg font-bold text-primary-800">{event.price}</span>
-                  </div>
-                  
-                  <h3 className="font-bold text-primary-800 mb-3">{event.title}</h3>
-                  
-                  <div className="space-y-2 text-sm text-primary-600 mb-4">
-                    <div className="flex items-center">
-                      <span className="w-4 mr-2">📅</span>
-                      <span>{new Date(event.date).toLocaleDateString('fr-FR')} à {event.time}</span>
-                    </div>
-                    <div className="flex items-center">
-                      <span className="w-4 mr-2">📍</span>
-                      <span>{event.location}</span>
-                    </div>
-                    <div className="flex items-center">
-                      <span className="w-4 mr-2">👤</span>
-                      <span>par {event.organizer}</span>
-                    </div>
-                    <div className="flex items-center">
-                      <span className="w-4 mr-2">👥</span>
-                      <span>{event.spots} places restantes</span>
-                    </div>
-                  </div>
-                  Link href={`/dashboard/participant/events/${event.id}`} className="flex-1 btn-primary text-sm text-center">
-                      Réserver
-                    </Link
-                  <div className="flex space-x-2">
-                    <button className="flex-1 btn-primary text-sm">Réserver</button>
-                    <button className="px-3 py-2 border border-primary-200 rounded-lg text-primary-600 hover:text-primary-800 hover:bg-primary-50 text-sm">
-                      ⭐
-                    </button>
-                  </div>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {availableEvents.map((event) => (
+              <div key={event.id} className="bg-white p-6 rounded-xl border border-primary-200 hover:shadow-lg transition-shadow">
+                <div className="flex items-start justify-between mb-4">
+                  <span className="text-sm bg-primary-100 text-primary-800 px-3 py-1 rounded-full">
+                    {event.category}
+                  </span>
+                  <span className="text-lg font-bold text-primary-800">{event.price}</span>
                 </div>
-              ))}
-            </div>
+                <h3 className="text-lg font-bold text-primary-800 mb-3">{event.title}</h3>
+                <div className="space-y-2 mb-4">
+                  <p className="text-sm text-primary-600 flex items-center">
+                    📅 {event.date} à {event.time}
+                  </p>
+                  <p className="text-sm text-primary-600 flex items-center">
+                    📍 {event.location}
+                  </p>
+                  <p className="text-sm text-primary-600 flex items-center">
+                    🏢 {event.organizer}
+                  </p>
+                  <p className="text-sm text-primary-600 flex items-center">
+                    👥 {event.spots} places restantes
+                  </p>
+                </div>
+                <div className="flex space-x-2">
+                  <Link href={`/dashboard/participant/events/${event.id}`} className="btn-secondary text-sm flex-1">
+                    Détails
+                  </Link>
+                  <button className="btn-primary text-sm flex-1">Réserver</button>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       )}
@@ -313,68 +280,58 @@ export default function ParticipantDashboard() {
         <div className="glass-effect p-6 rounded-2xl">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-xl font-bold text-primary-800">Mes réservations</h2>
-            <div className="flex space-x-2">
-              <select className="px-4 py-2 border border-primary-200 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm">
-                <option>Toutes</option>
-                <option>Confirmées</option>
-                <option>En attente</option>
-                <option>Passées</option>
-              </select>
-            </div>
+            <Link href="/dashboard/participant/reservations" className="btn-secondary text-sm">
+              Vue détaillée
+            </Link>
           </div>
           
           <div className="space-y-4">
             {myReservations.map((reservation) => (
-              <div key={reservation.id} className="bg-white p-6 rounded-lg border border-primary-200 hover:shadow-sm transition-shadow">
-                <div className="flex items-center justify-between">
-                  <div className="flex-1">
-                    <div className="flex items-center space-x-3 mb-2">
-                      <h3 className="font-semibold text-primary-800 text-lg">{reservation.eventTitle}</h3>
-                      <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-                        reservation.status === 'confirmed' ? 'bg-green-100 text-green-800' :
-                        reservation.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                        'bg-gray-100 text-gray-800'
-                      }`}>
-                        {reservation.status === 'confirmed' ? 'Confirmé' :
-                         reservation.status === 'pending' ? 'En attente' : 'Annulé'}
-                      </span>
-                    </div>
-                    
-                    <div className="grid md:grid-cols-2 gap-4 text-sm text-primary-600">
-                      <div className="space-y-1">
-                        <div className="flex items-center">
-                          <span className="w-4 mr-2">📅</span>
-                          <span>{new Date(reservation.date).toLocaleDateString('fr-FR')} à {reservation.time}</span>
-                        </div>
-                        <div className="flex items-center">
-                          <span className="w-4 mr-2">📍</span>
-                          <span>{reservation.location}</span>
-                        </div>
-                      </div>
-                      <div className="space-y-1">
-                        <div className="flex items-center">
-                          <span className="w-4 mr-2">🎫</span>
-                          <span>{reservation.ticketNumber}</span>
-                        </div>
-                        <div className="flex items-center">
-                          <span className="w-4 mr-2">👤</span>
-                          <span>Organisé par {reservation.organizer}</span>
-                        </div>
-                      </div>
-                    </div>
+              <div key={reservation.id} className="bg-white p-6 rounded-xl border border-primary-200">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="font-bold text-primary-800">{reservation.eventTitle}</h3>
+                  <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                    reservation.status === 'confirmed' 
+                      ? 'bg-green-100 text-green-800' 
+                      : 'bg-orange-100 text-orange-800'
+                  }`}>
+                    {reservation.status === 'confirmed' ? 'Confirmé' : 'En attente'}
+                  </span>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                  <div>
+                    <p className="text-sm text-primary-600">📅 Date</p>
+                    <p className="font-semibold text-primary-800">{reservation.date} à {reservation.time}</p>
                   </div>
-                  Link href={`/dashboard/participant/reservations/${reservation.id}`} className="btn-primary text-sm text-center">
-                      Voir détails
+                  <div>
+                    <p className="text-sm text-primary-600">📍 Lieu</p>
+                    <p className="font-semibold text-primary-800">{reservation.location}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-primary-600">🎫 Numéro de ticket</p>
+                    <p className="font-semibold text-primary-800">{reservation.ticketNumber}</p>
+                  </div>
+                </div>
+                
+                <div className="flex space-x-2">
+                  <Link 
+                    href={`/dashboard/participant/reservations/${reservation.id}`}
+                    className="btn-secondary text-sm"
+                  >
+                    Voir détails
+                  </Link>
+                  {reservation.status === 'confirmed' && (
+                    <Link 
+                      href={`/dashboard/participant/reservations/${reservation.id}/ticket`}
+                      className="btn-primary text-sm"
+                    >
+                      📱 Télécharger ticket
                     </Link>
-                    <Link href={`/dashboard/participant/reservations/${reservation.id}/ticket`} className="btn-secondary text-sm text-center">
-                      Télécharger ticket
-                    </Link
-                    <button className="btn-primary text-sm">Voir détails</button>
-                    <button className="btn-secondary text-sm">Télécharger ticket</button>
-                    {reservation.status === 'confirmed' && (
-                      <button className="text-red-600 hover:text-red-800 text-sm">Annuler</button>
-                    )}
-                  </div>
+                  )}
+                  <button className="text-red-600 hover:text-red-800 text-sm px-3 py-1">
+                    Annuler
+                  </button>
                 </div>
               </div>
             ))}
@@ -383,99 +340,84 @@ export default function ParticipantDashboard() {
       )}
 
       {activeTab === "profile" && (
-        <div className="space-y-6">
-          <div className="glass-effect p-6 rounded-2xl">
-            <h2 className="text-xl font-bold text-primary-800 mb-6">Mon profil</h2>
+        <div className="glass-effect p-6 rounded-2xl">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-xl font-bold text-primary-800">Mon profil</h2>
+            <button className="btn-secondary text-sm">Modifier</button>
+          </div>
+          
+          <div className="max-w-2xl">
+            <div className="flex items-center space-x-6 mb-8">
+              <div className="w-24 h-24 bg-gradient-to-br from-primary-200 to-primary-300 rounded-full flex items-center justify-center">
+                <span className="text-3xl font-bold text-primary-800">
+                  {user.fullName?.charAt(0) || 'U'}
+                </span>
+              </div>
+              <div>
+                <h3 className="text-2xl font-bold text-primary-800">{user.fullName}</h3>
+                <p className="text-primary-600">{user.email}</p>
+                <p className="text-sm text-primary-500">Membre depuis mars 2026</p>
+              </div>
+            </div>
             
-            <div className="grid md:grid-cols-2 gap-8">
-              {/* Informations personnelles */}
-              <div className="space-y-6">
-                <div>
-                  <h3 className="font-semibold text-primary-800 mb-4">Informations personnelles</h3>
-                  <div className="space-y-4">
-                    <div>
-                      <label className="block text-sm font-medium text-primary-700 mb-1">Nom complet</label>
-                      <input
-                        type="text"
-                        defaultValue={user.fullName}
-                        className="w-full px-4 py-3 border border-primary-200 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-primary-700 mb-1">Email</label>
-                      <input
-                        type="email"
-                        defaultValue={user.email}
-                        className="w-full px-4 py-3 border border-primary-200 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-primary-700 mb-1">Téléphone</label>
-                      <input
-                        type="tel"
-                        placeholder="+33 6 12 34 56 78"
-                        className="w-full px-4 py-3 border border-primary-200 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                      />
-                    </div>
-                  </div>
-                </div>
-                
-                <div>
-                  <h3 className="font-semibold text-primary-800 mb-4">Préférences</h3>
-                  <div className="space-y-3">
-                    <label className="flex items-center">
-                      <input type="checkbox" className="rounded border-primary-300 text-primary-600 focus:ring-primary-500" />
-                      <span className="ml-2 text-primary-700">Recevoir des notifications par email</span>
-                    </label>
-                    <label className="flex items-center">
-                      <input type="checkbox" className="rounded border-primary-300 text-primary-600 focus:ring-primary-500" />
-                      <span className="ml-2 text-primary-700">Recevoir des recommandations personnalisées</span>
-                    </label>
-                    <label className="flex items-center">
-                      <input type="checkbox" className="rounded border-primary-300 text-primary-600 focus:ring-primary-500" />
-                      <span className="ml-2 text-primary-700">Newsletter hebdomadaire</span>
-                    </label>
-                  </div>
-                </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label className="block text-sm font-semibold text-primary-800 mb-2">
+                  Nom complet
+                </label>
+                <input 
+                  type="text" 
+                  value={user.fullName || ''} 
+                  className="w-full px-4 py-2 border border-primary-200 rounded-lg focus:ring-2 focus:ring-primary-300 focus:border-transparent"
+                />
               </div>
               
-              {/* Statistiques du profil */}
-              <div className="space-y-6">
-                <div>
-                  <h3 className="font-semibold text-primary-800 mb-4">Mes statistiques</h3>
-                  <div className="grid grid-cols-2 gap-4">
-                    {[
-                      { label: "Événements assistés", value: "12", icon: "✅" },
-                      { label: "Points fidélité", value: "1,245", icon: "🏆" },
-                      { label: "Organisateurs suivis", value: "8", icon: "👥" },
-                      { label: "Avis laissés", value: "6", icon: "⭐" }
-                    ].map((stat) => (
-                      <div key={stat.label} className="bg-white p-4 rounded-lg border border-primary-200 text-center">
-                        <div className="text-2xl mb-1">{stat.icon}</div>
-                        <div className="text-xl font-bold text-primary-800">{stat.value}</div>
-                        <div className="text-sm text-primary-600">{stat.label}</div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-                
-                <div>
-                  <h3 className="font-semibold text-primary-800 mb-4">Badges obtenus</h3>
-                  <div className="grid grid-cols-3 gap-3">
-                    {[
-                      { name: "Premier événement", icon: "🎯" },
-                      { name: "Fidèle participant", icon: "💎" },
-                      { name: "Explorateur", icon: "🌟" },
-                      { name: "Critique", icon: "📝" },
-                      { name: "Networker", icon: "🤝" },
-                      { name: "Early Bird", icon: "🐦" }
-                    ].map((badge) => (
-                      <div key={badge.name} className="bg-white p-3 rounded-lg border border-primary-200 text-center">
-                        <div className="text-2xl mb-1">{badge.icon}</div>
-                        <div className="text-xs text-primary-600">{badge.name}</div>
-                      </div>
-                    ))}
-                  </div>
+              <div>
+                <label className="block text-sm font-semibold text-primary-800 mb-2">
+                  Email
+                </label>
+                <input 
+                  type="email" 
+                  value={user.email || ''} 
+                  className="w-full px-4 py-2 border border-primary-200 rounded-lg focus:ring-2 focus:ring-primary-300 focus:border-transparent"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-semibold text-primary-800 mb-2">
+                  Téléphone
+                </label>
+                <input 
+                  type="tel" 
+                  placeholder="+33 6 12 34 56 78"
+                  className="w-full px-4 py-2 border border-primary-200 rounded-lg focus:ring-2 focus:ring-primary-300 focus:border-transparent"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-semibold text-primary-800 mb-2">
+                  Ville
+                </label>
+                <input 
+                  type="text" 
+                  placeholder="Paris"
+                  className="w-full px-4 py-2 border border-primary-200 rounded-lg focus:ring-2 focus:ring-primary-300 focus:border-transparent"
+                />
+              </div>
+              
+              <div className="md:col-span-2">
+                <label className="block text-sm font-semibold text-primary-800 mb-2">
+                  Préférences d'événements
+                </label>
+                <div className="flex flex-wrap gap-2">
+                  {favoriteCategories.map((cat, index) => (
+                    <span 
+                      key={index}
+                      className="bg-primary-100 text-primary-800 px-3 py-1 rounded-full text-sm"
+                    >
+                      {cat.icon} {cat.name}
+                    </span>
+                  ))}
                 </div>
               </div>
             </div>

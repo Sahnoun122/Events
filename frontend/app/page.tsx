@@ -94,7 +94,7 @@ export default function Home() {
             Plateforme professionnelle de gestion d&apos;événements. Créez, gérez et participez à des événements mémorables avec facilité et élégance.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link href="/dashboard" className="btn-primary text-lg px-8 py-4">
+            <Link href="/auth/login" className="btn-primary text-lg px-8 py-4">
               Commencer maintenant
             </Link>
             <Link href="#services" className="btn-secondary text-lg px-8 py-4">

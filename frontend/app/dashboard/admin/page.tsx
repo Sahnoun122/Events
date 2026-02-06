@@ -1,19 +1,45 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
 
 export default function AdminDashboard() {
-  const { user } = useAuth();
+  const { user, isLoading } = useAuth();
   const [activeTab, setActiveTab] = useState("overview");
   const router = useRouter();
 
-  // Redirection si pas admin
-  if (!user || user.role !== 'admin') {
-    router.push('/dashboard');
-    return null;
+  // Protection de la page admin
+  useEffect(() => {
+    if (!isLoading && (!user || user.role !== 'admin')) {
+      router.push('/auth/login');
+      return;
+    }
+  }, [user, isLoading, router]);
+
+  // Afficher le loader pendant la vérification
+  if (isLoading || !user || user.role !== 'admin') {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-50 to-white">
+        <div className="text-center space-y-4">
+          <div className="w-16 h-16 mx-auto bg-gradient-to-br from-primary-200 to-primary-300 rounded-full flex items-center justify-center">
+            <span className="text-2xl font-bold text-primary-800">⚙️</span>
+          </div>
+          <div className="flex space-x-2 justify-center">
+            <div className="w-3 h-3 bg-primary-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
+            <div className="w-3 h-3 bg-primary-500 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
+            <div className="w-3 h-3 bg-primary-600 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+          </div>
+          <div className="space-y-2">
+            <h2 className="text-xl font-semibold text-primary-800">Admin Panel</h2>
+            <p className="text-primary-600">
+              {isLoading ? "Vérification des permissions..." : "Accès restreint aux administrateurs"}
+            </p>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   const adminStats = [
@@ -44,41 +70,33 @@ export default function AdminDashboard() {
         <div className="flex items-center justify-between mb-6">
           <div>
             <h1 className="text-2xl font-bold text-primary-800 mb-2">
-              Dashboard Administrateur 👑
+              Panel d'administration
             </h1>
             <p className="text-primary-600">
-              Gérez votre plateforme EventsPro en toute simplicité
+              Gérez votre plateforme d'événements
             </p>
           </div>
-          <div className="flex space-x-2">
-            <button className="btn-primary text-sm">
-              📊 Rapport mensuel
-            </button>
-            <button className="btn-secondary text-sm">
-              ⚙️ Paramètres
-            </button>
-          </div>
+          <div className="text-4xl">⚙️</div>
         </div>
-        
+
         {/* Navigation par onglets */}
-        <div className="flex space-x-1 p-1 bg-primary-100 rounded-lg">
+        <div className="flex space-x-1 bg-primary-100 p-1 rounded-xl">
           {[
-            { id: "overview", label: "Vue d'ensemble", icon: "📊" },
-            { id: "events", label: "Événements", icon: "📅" },
-            { id: "users", label: "Utilisateurs", icon: "👥" },
-            { id: "analytics", label: "Analytics", icon: "📈" }
+            { key: "overview", label: "Vue d'ensemble", icon: "📊" },
+            { key: "events", label: "Événements", icon: "🎪" },
+            { key: "users", label: "Utilisateurs", icon: "👥" },
+            { key: "analytics", label: "Analytics", icon: "📈" }
           ].map((tab) => (
             <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`flex items-center space-x-2 px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                activeTab === tab.id
+              key={tab.key}
+              onClick={() => setActiveTab(tab.key)}
+              className={`flex-1 py-2 px-4 text-sm font-medium rounded-lg transition-all duration-200 ${
+                activeTab === tab.key
                   ? 'bg-white text-primary-800 shadow-sm'
-                  : 'text-primary-600 hover:text-primary-800 hover:bg-primary-50'
+                  : 'text-primary-600 hover:text-primary-800'
               }`}
             >
-              <span>{tab.icon}</span>
-              <span>{tab.label}</span>
+              {tab.icon} {tab.label}
             </button>
           ))}
         </div>
@@ -86,97 +104,91 @@ export default function AdminDashboard() {
 
       {/* Contenu selon l'onglet actif */}
       {activeTab === "overview" && (
-        <>
+        <div className="space-y-6">
           {/* Statistiques principales */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {adminStats.map((stat, index) => (
-              <div key={index} className="glass-effect p-6 rounded-2xl hover:shadow-lg transition-shadow">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-primary-600">{stat.title}</p>
-                    <p className="text-2xl font-bold text-primary-800 mt-1">{stat.value}</p>
-                    <p className="text-sm text-green-600 mt-1">{stat.change} ce mois</p>
+              <div key={index} className="glass-effect p-6 rounded-2xl">
+                <div className="flex items-center justify-between mb-4">
+                  <div className={`p-3 rounded-xl text-2xl ${stat.color}`}>
+                    {stat.icon}
                   </div>
-                  <div className={`p-3 rounded-full ${stat.color}`}>
-                    <span className="text-2xl">{stat.icon}</span>
-                  </div>
+                  <span className="text-sm font-semibold text-green-600">{stat.change}</span>
                 </div>
+                <h3 className="text-2xl font-bold text-primary-800">{stat.value}</h3>
+                <p className="text-primary-600">{stat.title}</p>
               </div>
             ))}
           </div>
 
-          {/* Événements récents et utilisateurs */}
-          <div className="grid lg:grid-cols-2 gap-6">
-            {/* Événements récents */}
+          {/* Aperçu des événements récents */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <div className="glass-effect p-6 rounded-2xl">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-xl font-bold text-primary-800">Événements récents</h2>
-              <Link href="/dashboard/admin/events" className="btn-secondary text-sm">
-                Voir tous
-              </Link>
+                <Link href="/dashboard/admin/events" className="btn-secondary text-sm">
+                  Voir tous
+                </Link>
               </div>
-              <div className="space-y-4">
-                {recentEvents.map((event) => (
-                  <div key={event.id} className="flex items-center justify-between p-4 bg-white rounded-lg border border-primary-200 hover:shadow-sm transition-shadow">
-                    <div className="flex-1">
-                      <h3 className="font-semibold text-primary-800">{event.title}</h3>
-                      <div className="flex items-center space-x-4 text-sm text-primary-600">
-                        <span>👤 {event.organizer}</span>
-                        <span>📅 {new Date(event.date).toLocaleDateString('fr-FR')}</span>
-                        <span>👥 {event.participants}</span>
+              <div className="space-y-3">
+                {recentEvents.slice(0, 3).map((event) => (
+                  <div key={event.id} className="bg-white p-4 rounded-xl border border-primary-200">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h3 className="font-semibold text-primary-800">{event.title}</h3>
+                        <p className="text-sm text-primary-600">{event.organizer} • {event.date}</p>
                       </div>
+                      <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
+                        event.status === 'confirmed' ? 'bg-green-100 text-green-800' :
+                        event.status === 'pending' ? 'bg-orange-100 text-orange-800' :
+                        'bg-gray-100 text-gray-800'
+                      }`}>
+                        {event.status}
+                      </span>
                     </div>
-                    <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-                      event.status === 'confirmed' ? 'bg-green-100 text-green-800' :
-                      event.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                      'bg-gray-100 text-gray-800'
-                    }`}>
-                      {event.status === 'confirmed' ? 'Confirmé' :
-                       event.status === 'pending' ? 'En attente' : 'Brouillon'}
-                    </span>
                   </div>
                 ))}
               </div>
             </div>
 
-            {/* Nouveaux utilisateurs */}
             <div className="glass-effect p-6 rounded-2xl">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-xl font-bold text-primary-800">Nouveaux utilisateurs</h2>
-              <Link href="/dashboard/admin/users" className="btn-secondary text-sm">
-                Gérer
-              </Link>
+                <Link href="/dashboard/admin/users" className="btn-secondary text-sm">
+                  Gérer
+                </Link>
               </div>
-              <div className="space-y-4">
-                {recentUsers.map((user) => (
-                  <div key={user.id} className="flex items-center justify-between p-4 bg-white rounded-lg border border-primary-200">
-                    <div className="flex items-center space-x-3">
-                      <div className="w-10 h-10 bg-primary-200 rounded-full flex items-center justify-center">
-                        <span className="text-primary-800 font-semibold">
-                          {user.name.split(' ').map(n => n[0]).join('')}
-                        </span>
-                      </div>
+              <div className="space-y-3">
+                {recentUsers.slice(0, 3).map((user) => (
+                  <div key={user.id} className="bg-white p-4 rounded-xl border border-primary-200">
+                    <div className="flex items-center justify-between">
                       <div>
-                        <h3 className="font-medium text-primary-800">{user.name}</h3>
+                        <h3 className="font-semibold text-primary-800">{user.name}</h3>
                         <p className="text-sm text-primary-600">{user.email}</p>
                       </div>
-                    </div>
-                    <div className="text-right">
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                        user.role === 'organizer' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800'
-                      }`}>
-                        {user.role === 'organizer' ? 'Organisateur' : 'Participant'}
-                      </span>
-                      <p className="text-xs text-primary-500 mt-1">
-                        {new Date(user.joinDate).toLocaleDateString('fr-FR')}
-                      </p>
+                      <span className="text-xs text-primary-500">{user.role}</span>
                     </div>
                   </div>
                 ))}
               </div>
             </div>
           </div>
-        </>
+
+          {/* Actions rapides */}
+          <div className="glass-effect p-6 rounded-2xl">
+            <h2 className="text-xl font-bold text-primary-800 mb-6">Actions rapides</h2>
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex space-x-2">
+                <Link href="/dashboard/admin/statistics" className="btn-secondary text-sm">
+                  📊 Rapport mensuel
+                </Link>
+                <button className="btn-secondary text-sm">
+                  ⚙️ Paramètres
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
 
       {activeTab === "events" && (
@@ -185,41 +197,40 @@ export default function AdminDashboard() {
             <h2 className="text-xl font-bold text-primary-800">Gestion des événements</h2>
             <div className="flex space-x-2">
               <button className="btn-secondary text-sm">Filtrer</button>
-                <Link href="/dashboard/admin/events/create" className="btn-primary text-sm">
-                  ➕ Nouvel événement
-                </Link>
+              <Link href="/dashboard/admin/events/create" className="btn-primary text-sm">
+                ➕ Nouvel événement
+              </Link>
+            </div>
+          </div>
+          
+          <div className="overflow-x-auto">
             <table className="w-full">
-              <thead className="bg-primary-50">
+              <thead className="bg-primary-50 text-primary-800">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-primary-600 uppercase tracking-wider">Événement</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-primary-600 uppercase tracking-wider">Organisateur</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-primary-600 uppercase tracking-wider">Date</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-primary-600 uppercase tracking-wider">Participants</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-primary-600 uppercase tracking-wider">Statut</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-primary-600 uppercase tracking-wider">Actions</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Événement</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Organisateur</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Date</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Statut</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Participants</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-primary-200">
+              <tbody className="bg-white divide-y divide-primary-200">
                 {recentEvents.map((event) => (
-                  <tr key={event.id} className="hover:bg-primary-25">
-                    <td className="px-6 py-4">
-                      <div className="font-medium text-primary-800">{event.title}</div>
-                    </td>
-                    <td className="px-6 py-4 text-primary-600">{event.organizer}</td>
-                    <td className="px-6 py-4 text-primary-600">
-                      {new Date(event.date).toLocaleDateString('fr-FR')}
-                    </td>
-                    <td className="px-6 py-4 text-primary-600">{event.participants}</td>
-                    <td className="px-6 py-4">
-                      <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+                  <tr key={event.id}>
+                    <td className="px-6 py-4 whitespace-nowrap font-medium text-primary-800">{event.title}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-primary-600">{event.organizer}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-primary-600">{event.date}</td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
                         event.status === 'confirmed' ? 'bg-green-100 text-green-800' :
-                        event.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                        event.status === 'pending' ? 'bg-orange-100 text-orange-800' :
                         'bg-gray-100 text-gray-800'
                       }`}>
-                        {event.status === 'confirmed' ? 'Confirmé' :
-                         event.status === 'pending' ? 'En attente' : 'Brouillon'}
+                        {event.status}
                       </span>
                     </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-primary-600">{event.participants}</td>
                     <td className="px-6 py-4">
                       <div className="flex space-x-2">
                         <Link href={`/dashboard/admin/events/${event.id}`} className="text-primary-600 hover:text-primary-800 text-sm">
@@ -244,47 +255,42 @@ export default function AdminDashboard() {
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-xl font-bold text-primary-800">Gestion des utilisateurs</h2>
             <div className="flex space-x-2">
-              <input
-                type="text"
-                placeholder="Rechercher un utilisateur..."
-                className="px-4 py-2 border border-primary-200 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-              />
-              <button className="btn-primary text-sm">➕ Inviter</button>
+              <button className="btn-secondary text-sm">Filtrer</button>
+              <button className="btn-primary text-sm">➕ Inviter utilisateur</button>
             </div>
           </div>
           
-          <div className="grid gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {recentUsers.map((user) => (
-              <div key={user.id} className="bg-white p-6 rounded-lg border border-primary-200 hover:shadow-sm transition-shadow">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-4">
-                    <div className="w-12 h-12 bg-primary-200 rounded-full flex items-center justify-center">
-                      <span className="text-primary-800 font-semibold text-lg">
-                        {user.name.split(' ').map(n => n[0]).join('')}
-                      </span>
-                    </div>
-                    <div>
-                      <h3 className="font-semibold text-primary-800">{user.name}</h3>
-                      <p className="text-primary-600">{user.email}</p>
-                      <div className="flex items-center space-x-4 text-sm text-primary-500 mt-1">
-                        <span>Inscrit le {new Date(user.joinDate).toLocaleDateString('fr-FR')}</span>
-                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                          user.role === 'organizer' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800'
-                        }`}>
-                          {user.role === 'organizer' ? 'Organisateur' : 'Participant'}
-                        </span>
-                     Link href="/dashboard/admin/reservations" className="btn-secondary text-sm">
-                      Profil
-                    </Link>
-                    <Link href={`/dashboard/admin/users/${user.id}`} className="text-primary-600 hover:text-primary-800 text-sm">
-                      Modifier
-                    </Link
+              <div key={user.id} className="bg-white p-6 rounded-xl border border-primary-200">
+                <div className="flex items-center space-x-4 mb-4">
+                  <div className="w-12 h-12 bg-gradient-to-br from-primary-200 to-primary-300 rounded-full flex items-center justify-center">
+                    <span className="font-bold text-primary-800">{user.name.charAt(0)}</span>
                   </div>
-                  <div className="flex space-x-2">
-                    <button className="btn-secondary text-sm">Profil</button>
-                    <button className="text-primary-600 hover:text-primary-800 text-sm">Modifier</button>
-                    <button className="text-red-600 hover:text-red-800 text-sm">Désactiver</button>
+                  <div>
+                    <h3 className="font-semibold text-primary-800">{user.name}</h3>
+                    <p className="text-sm text-primary-600">{user.email}</p>
                   </div>
+                </div>
+                <div className="flex items-center justify-between text-sm mb-4">
+                  <span className="text-primary-600">Rôle:</span>
+                  <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
+                    user.role === 'admin' ? 'bg-red-100 text-red-800' :
+                    user.role === 'organizer' ? 'bg-blue-100 text-blue-800' :
+                    'bg-green-100 text-green-800'
+                  }`}>
+                    {user.role}
+                  </span>
+                </div>
+                <p className="text-xs text-primary-500 mb-4">Membre depuis: {user.joinDate}</p>
+                <div className="flex space-x-2">
+                  <Link href="/dashboard/admin/reservations" className="btn-secondary text-sm">
+                    Profil
+                  </Link>
+                  <Link href={`/dashboard/admin/users/${user.id}`} className="text-primary-600 hover:text-primary-800 text-sm">
+                    Modifier
+                  </Link>
+                  <button className="text-red-600 hover:text-red-800 text-sm">Désactiver</button>
                 </div>
               </div>
             ))}
@@ -294,23 +300,23 @@ export default function AdminDashboard() {
 
       {activeTab === "analytics" && (
         <div className="space-y-6">
-          {/* Graphiques et analytics */}
-          <div className="glass-effect p-6 rounded-2xl">
-            <h2 className="text-xl font-bold text-primary-800 mb-4">Analytics de la plateforme</h2>
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="glass-effect p-6 rounded-2xl">
+              <h2 className="text-xl font-bold text-primary-800 mb-6">Événements par mois</h2>
               <div className="bg-white p-6 rounded-lg border border-primary-200">
-                <h3 className="font-semibold text-primary-800 mb-4">Croissance des utilisateurs</h3>
-                <div className="h-64 bg-gradient-to-br from-primary-50 to-primary-100 rounded-lg flex items-center justify-center">
+                <div className="h-64 bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg flex items-center justify-center">
                   <div className="text-center">
-                    <div className="text-4xl mb-2">📈</div>
-                    <p className="text-primary-600">Graphique de croissance</p>
-                    <p className="text-sm text-primary-500">+25% ce mois</p>
+                    <div className="text-4xl mb-2">📊</div>
+                    <p className="text-blue-600">Graphique des événements</p>
+                    <p className="text-sm text-blue-500">+15% vs mois dernier</p>
                   </div>
                 </div>
               </div>
-              
+            </div>
+            
+            <div className="glass-effect p-6 rounded-2xl">
+              <h2 className="text-xl font-bold text-primary-800 mb-6">Revenus mensuels</h2>
               <div className="bg-white p-6 rounded-lg border border-primary-200">
-                <h3 className="font-semibold text-primary-800 mb-4">Revenus mensuels</h3>
                 <div className="h-64 bg-gradient-to-br from-green-50 to-green-100 rounded-lg flex items-center justify-center">
                   <div className="text-center">
                     <div className="text-4xl mb-2">💰</div>
@@ -321,27 +327,25 @@ export default function AdminDashboard() {
               </div>
             </div>
           </div>
-          
+
           <div className="glass-effect p-6 rounded-2xl">
-            <h2 className="text-xl font-bold text-primary-800 mb-4">Événements populaires</h2>
-            <div className="space-y-4">
-              {recentEvents.map((event, index) => (
-                <div key={event.id} className="bg-white p-4 rounded-lg border border-primary-200 flex items-center justify-between">
-                  <div className="flex items-center space-x-4">
-                    <div className="w-8 h-8 bg-primary-100 rounded-full flex items-center justify-center">
-                      <span className="font-bold text-primary-800">#{index + 1}</span>
-                    </div>
-                    <div>
-                      <h3 className="font-medium text-primary-800">{event.title}</h3>
-                      <p className="text-sm text-primary-600">{event.participants} participants</p>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <div className="text-sm font-medium text-primary-800">Taux de réservation</div>
-                    <div className="text-sm text-green-600">85%</div>
-                  </div>
-                </div>
-              ))}
+            <h2 className="text-xl font-bold text-primary-800 mb-6">Métriques détaillées</h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="bg-white p-6 rounded-xl border border-primary-200 text-center">
+                <div className="text-3xl mb-2">⭐</div>
+                <div className="text-2xl font-bold text-primary-800">4.8</div>
+                <p className="text-primary-600">Note moyenne</p>
+              </div>
+              <div className="bg-white p-6 rounded-xl border border-primary-200 text-center">
+                <div className="text-3xl mb-2">🔄</div>
+                <div className="text-2xl font-bold text-primary-800">85%</div>
+                <p className="text-primary-600">Taux de rétention</p>
+              </div>
+              <div className="bg-white p-6 rounded-xl border border-primary-200 text-center">
+                <div className="text-3xl mb-2">📈</div>
+                <div className="text-2xl font-bold text-primary-800">+42%</div>
+                <p className="text-primary-600">Croissance</p>
+              </div>
             </div>
           </div>
         </div>

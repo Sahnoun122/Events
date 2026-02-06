@@ -1,6 +1,6 @@
 import { Event, CreateEventDto, UpdateEventDto } from '@/types/event';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
 
 class EventsService {
   private async request(endpoint: string, options: RequestInit = {}) {
@@ -57,9 +57,19 @@ class EventsService {
     return this.request('events');
   }
 
+  // Récupérer les événements (alias pour getPublicEvents)
+  async getEvents(): Promise<Event[]> {
+    return this.getPublicEvents();
+  }
+
   // Récupérer les événements publics
   async getPublicEvents(): Promise<Event[]> {
     return this.request('events/public');
+  }
+
+  // Récupérer un événement par ID
+  async getEvent(id: string): Promise<Event> {
+    return this.getEventById(id);
   }
 
   // Récupérer un événement par ID

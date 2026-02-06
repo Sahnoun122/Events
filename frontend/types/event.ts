@@ -12,6 +12,8 @@ export interface Event {
   date: string;
   location: string;
   capacity: number;
+  maxParticipants?: number; // Alias pour capacity
+  category?: string;
   status: EventStatus;
   createdAt?: string;
   updatedAt?: string;
@@ -23,6 +25,7 @@ export interface CreateEventDto {
   date: string;
   location: string;
   capacity: number;
+  category?: string;
 }
 
 export interface UpdateEventDto extends Partial<CreateEventDto> {}

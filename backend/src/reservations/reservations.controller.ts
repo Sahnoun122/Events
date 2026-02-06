@@ -44,6 +44,23 @@ export class ReservationsController {
     return await this.reservationsService.getMyReservations(user.id);
   }
 
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN)
+  @Get('stats')
+  async getReservationStats() {
+    const allReservations = await this.reservationsService.getAllReservations();
+    
+    const stats = {
+      total: allReservations.length,
+      pending: allReservations.filter(r => r.status === ReservationStatus.PENDING).length,
+      confirmed: allReservations.filter(r => r.status === ReservationStatus.CONFIRMED).length,
+      canceled: allReservations.filter(r => r.status === ReservationStatus.CANCELED).length,
+      refused: allReservations.filter(r => r.status === ReservationStatus.REFUSED).length,
+    };
+    
+    return stats;
+  }
+
 
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.PARTICIPANT)

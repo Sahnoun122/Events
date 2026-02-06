@@ -52,9 +52,26 @@ class ReservationsService {
     }
   }
 
-  // Récupérer toutes les réservations (admin)
-  async getAllReservations(): Promise<Reservation[]> {
-    return this.request('reservations');
+  // Récupérer toutes les réservations (admin) avec filtres optionnels
+  async getAllReservations(filters?: {
+    eventId?: string;
+    participantId?: string;
+    status?: ReservationStatus;
+  }): Promise<Reservation[]> {
+    let endpoint = 'reservations';
+    
+    if (filters) {
+      const params = new URLSearchParams();
+      if (filters.eventId) params.append('eventId', filters.eventId);
+      if (filters.participantId) params.append('participantId', filters.participantId);
+      if (filters.status) params.append('status', filters.status);
+      
+      if (params.toString()) {
+        endpoint += '?' + params.toString();
+      }
+    }
+    
+    return this.request(endpoint);
   }
 
   // Récupérer les réservations par événement
@@ -100,7 +117,9 @@ class ReservationsService {
 
   // Refuser une réservation
   async rejectReservation(id: string, notes?: string): Promise<Reservation> {
-    return this.updateReservationStatus(id, ReservationStatus.REJECTED, notes);
+    return this.request(`reservations/${id}/refuse`, {
+      method: 'PATCH',
+    });
   }
 
   // Annuler une réservation (participant)
@@ -114,6 +133,13 @@ class ReservationsService {
   async deleteReservation(id: string): Promise<void> {
     await this.request(`reservations/${id}`, {
       method: 'DELETE',
+    });
+  }
+
+  // Annuler une réservation (admin) - peut annuler même les confirmées
+  async adminCancelReservation(id: string): Promise<Reservation> {
+    return this.request(`reservations/${id}/admin-cancel`, {
+      method: 'PATCH',
     });
   }
 

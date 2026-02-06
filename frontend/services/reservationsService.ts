@@ -78,10 +78,10 @@ class ReservationsService {
   }
 
   // Créer une nouvelle réservation
-  async createReservation(reservationData: CreateReservationDto): Promise<Reservation> {
-    return this.request('reservations', {
+  async createReservation(eventId: string, reservationData?: CreateReservationDto): Promise<Reservation> {
+    return this.request(`reservations/${eventId}`, {
       method: 'POST',
-      body: JSON.stringify(reservationData),
+      body: JSON.stringify(reservationData || {}),
     });
   }
 

@@ -3,6 +3,7 @@
 import { useAuth } from '@/context/AuthContext';
 import { useEffect, useState } from 'react';
 import { eventsService } from '@/services/eventsService';
+import { reservationsService } from '@/services/reservationsService';
 import { Event, EventStatus } from '@/types/event';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -15,6 +16,8 @@ export default function EventDetailPage({ params }: { params: { id: string } }) 
   const [error, setError] = useState<string | null>(null);
   const [reservationLoading, setReservationLoading] = useState(false);
   const [reservationSuccess, setReservationSuccess] = useState(false);
+  const [existingReservation, setExistingReservation] = useState<any>(null);
+  const [checkingReservation, setCheckingReservation] = useState(false);
 
   const loadEvent = async () => {
     try {
@@ -28,10 +31,29 @@ export default function EventDetailPage({ params }: { params: { id: string } }) 
       }
       
       setEvent(eventData);
+      
+      // Vérifier s'il y a une réservation existante
+      await checkExistingReservation();
+      
     } catch (error) {
       setError(error instanceof Error ? error.message : 'Erreur lors du chargement de l\'événement');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const checkExistingReservation = async () => {
+    if (!user) return;
+    
+    try {
+      setCheckingReservation(true);
+      const myReservations = await reservationsService.getMyReservations();
+      const existingRes = myReservations.find(res => res.event._id === params.id);
+      setExistingReservation(existingRes);
+    } catch (error) {
+      console.warn('Impossible de vérifier les réservations existantes:', error);
+    } finally {
+      setCheckingReservation(false);
     }
   };
 
@@ -46,17 +68,19 @@ export default function EventDetailPage({ params }: { params: { id: string } }) 
 
     try {
       setReservationLoading(true);
-      // Ici vous pourriez ajouter un appel à l'API de réservation
-      // await reservationsService.createReservation(event._id, { comment: '' });
       
-      // Pour l'instant, on simule une réservation réussie
-      setTimeout(() => {
-        setReservationSuccess(true);
-        setReservationLoading(false);
-      }, 1000);
+      // Créer la réservation via l'API
+      const reservation = await reservationsService.createReservation(event._id, {
+        comment: '' // Vous pouvez ajouter un champ commentaire plus tard
+      });
+      
+      setReservationSuccess(true);
+      console.log('Réservation créée:', reservation);
       
     } catch (error) {
       console.error('Erreur lors de la réservation:', error);
+      setError(error instanceof Error ? error.message : 'Erreur lors de la réservation');
+    } finally {
       setReservationLoading(false);
     }
   };
@@ -158,7 +182,39 @@ export default function EventDetailPage({ params }: { params: { id: string } }) 
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
-              <span>Votre réservation a été enregistrée avec succès !</span>
+              <div>
+                <p className="font-medium">Votre réservation a été enregistrée avec succès !</p>
+                <p className="text-sm">Vous recevrez une confirmation par email. Votre réservation est en attente de validation par l'organisateur.</p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Réservation existante */}
+        {existingReservation && (
+          <div className={`px-4 py-3 rounded-lg mb-6 ${
+            existingReservation.status === 'CONFIRMED' ? 'bg-green-50 border border-green-200 text-green-700' :
+            existingReservation.status === 'PENDING' ? 'bg-yellow-50 border border-yellow-200 text-yellow-700' :
+            'bg-gray-50 border border-gray-200 text-gray-700'
+          }`}>
+            <div className="flex items-center space-x-2">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                {existingReservation.status === 'CONFIRMED' ? (
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                ) : (
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                )}
+              </svg>
+              <div>
+                <p className="font-medium">
+                  {existingReservation.status === 'CONFIRMED' ? 'Votre réservation est confirmée' :
+                   existingReservation.status === 'PENDING' ? 'Votre réservation est en attente' :
+                   'Votre réservation a été traitée'}
+                </p>
+                <p className="text-sm">
+                  Réservée le {new Date(existingReservation.reservationDate).toLocaleDateString('fr-FR')}
+                </p>
+              </div>
             </div>
           </div>
         )}
@@ -251,10 +307,32 @@ export default function EventDetailPage({ params }: { params: { id: string } }) 
                 </div>
 
                 <div className="flex items-center space-x-4">
-                  {dateStatus.canBook && !reservationSuccess ? (
+                  {/* Affichage selon l'état de la réservation */}
+                  {existingReservation ? (
+                    <div className="flex items-center space-x-2">
+                      <div className={`px-4 py-2 rounded-lg flex items-center space-x-2 ${
+                        existingReservation.status === 'CONFIRMED' ? 'bg-green-100 text-green-800' :
+                        existingReservation.status === 'PENDING' ? 'bg-yellow-100 text-yellow-800' :
+                        'bg-gray-100 text-gray-800'
+                      }`}>
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          {existingReservation.status === 'CONFIRMED' ? (
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          ) : (
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          )}
+                        </svg>
+                        <span className="font-medium">
+                          {existingReservation.status === 'CONFIRMED' ? 'Réservation confirmée' :
+                           existingReservation.status === 'PENDING' ? 'Réservation en attente' :
+                           'Réservation traitée'}
+                        </span>
+                      </div>
+                    </div>
+                  ) : dateStatus.canBook && !reservationSuccess ? (
                     <button
                       onClick={handleReservation}
-                      disabled={reservationLoading}
+                      disabled={reservationLoading || checkingReservation}
                       className="px-8 py-3 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 disabled:from-gray-400 disabled:to-gray-500 text-white rounded-lg font-medium transition-all duration-200 shadow-sm hover:shadow-md disabled:cursor-not-allowed flex items-center space-x-2"
                     >
                       {reservationLoading ? (
@@ -264,6 +342,14 @@ export default function EventDetailPage({ params }: { params: { id: string } }) 
                             <path fill="currentColor" className="opacity-75" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                           </svg>
                           <span>Réservation en cours...</span>
+                        </>
+                      ) : checkingReservation ? (
+                        <>
+                          <svg className="animate-spin w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" className="opacity-25" />
+                            <path fill="currentColor" className="opacity-75" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                          </svg>
+                          <span>Vérification...</span>
                         </>
                       ) : (
                         <>

@@ -1,8 +1,8 @@
 export enum ReservationStatus {
   PENDING = 'PENDING',
   CONFIRMED = 'CONFIRMED',
-  CANCELLED = 'CANCELLED',
-  REJECTED = 'REJECTED'
+  CANCELED = 'CANCELED',
+  REFUSED = 'REFUSED'
 }
 
 export interface Reservation {
@@ -27,8 +27,7 @@ export interface Reservation {
 }
 
 export interface CreateReservationDto {
-  eventId: string;
-  notes?: string;
+  comment?: string;
 }
 
 export interface UpdateReservationDto {
@@ -41,7 +40,7 @@ export interface ReservationStats {
   pending: number;
   confirmed: number;
   cancelled: number;
-  rejected: number;
+  refused: number;
   upcomingEvents: number;
   averageFillRate: number;
 }

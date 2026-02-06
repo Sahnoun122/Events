@@ -5,6 +5,10 @@ const config: Config = {
     './pages/**/*.{js,ts,jsx,tsx,mdx}',
     './components/**/*.{js,ts,jsx,tsx,mdx}',
     './app/**/*.{js,ts,jsx,tsx,mdx}',
+    './src/**/*.{js,ts,jsx,tsx,mdx}',
+    './context/**/*.{js,ts,jsx,tsx,mdx}',
+    './services/**/*.{js,ts,jsx,tsx,mdx}',
+    './types/**/*.{js,ts,jsx,tsx,mdx}',
   ],
   theme: {
     extend: {
@@ -20,6 +24,18 @@ const config: Config = {
           700: '#b08d5c',
           800: '#8f724a',
           900: '#755e3e',
+        },
+        secondary: {
+          50: '#f8f6f3',
+          100: '#f1ece4',
+          200: '#e3d5c4',
+          300: '#d1b89e',
+          400: '#bf9e7b',
+          500: '#a8845d',
+          600: '#8f6f4a',
+          700: '#755c3c',
+          800: '#5f4a31',
+          900: '#4d3c29',
         },
         beige: {
           50: '#fefdfb',

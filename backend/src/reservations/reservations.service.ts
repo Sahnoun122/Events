@@ -76,10 +76,15 @@ export class ReservationsService {
 
 
   async getMyReservations(participantId: string) {
-    return await this.reservationModel
+    console.log('🔍 Recherche de réservations pour l\'utilisateur:', participantId);
+    
+    const reservations = await this.reservationModel
       .find({ participant: new Types.ObjectId(participantId) })
       .populate('event')
       .sort({ createdAt: -1 });
+    
+    console.log('📋 Réservations trouvées:', reservations.length, reservations);
+    return reservations;
   }
 
 

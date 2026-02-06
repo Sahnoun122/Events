@@ -103,9 +103,11 @@ class ReservationsService {
     return this.updateReservationStatus(id, ReservationStatus.REJECTED, notes);
   }
 
-  // Annuler une réservation
-  async cancelReservation(id: string, notes?: string): Promise<Reservation> {
-    return this.updateReservationStatus(id, ReservationStatus.CANCELLED, notes);
+  // Annuler une réservation (participant)
+  async cancelReservation(id: string): Promise<Reservation> {
+    return this.request(`reservations/${id}/cancel`, {
+      method: 'PATCH',
+    });
   }
 
   // Supprimer une réservation

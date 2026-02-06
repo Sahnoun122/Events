@@ -32,7 +32,7 @@ export class ReservationsController {
   ) {
     return await this.reservationsService.createReservation(
       eventId,
-      user._id,
+      user.id,
       dto,
     );
   }
@@ -41,7 +41,7 @@ export class ReservationsController {
   @Roles(Role.PARTICIPANT)
   @Get('me')
   async getMyReservations(@CurrentUser() user: any) {
-    return await this.reservationsService.getMyReservations(user._id);
+    return await this.reservationsService.getMyReservations(user.id);
   }
 
 
@@ -54,7 +54,7 @@ export class ReservationsController {
   ) {
     return await this.reservationsService.cancelReservation(
       reservationId,
-      user._id,
+      user.id,
     );
   }
 

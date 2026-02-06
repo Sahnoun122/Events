@@ -138,29 +138,53 @@ export default function ParticipantDashboard() {
               Découvrez vos prochains événements et gérez vos réservations
             </p>
           </div>
-          <div className="text-4xl">🎟️</div>
+          <div className="flex items-center space-x-4">
+            <Link 
+              href="/dashboard/participant/reservations"
+              className="bg-[#8B7355] text-white px-6 py-3 rounded-xl hover:bg-[#6B5B47] transition-colors flex items-center space-x-2 shadow-lg"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+              </svg>
+              <span className="font-medium">Mes Réservations</span>
+            </Link>
+            <div className="text-4xl">🎟️</div>
+          </div>
         </div>
 
         {/* Navigation par onglets */}
         <div className="flex space-x-1 bg-primary-100 p-1 rounded-xl mb-6">
           {[
-            { key: "dashboard", label: "🏠 Accueil", icon: "🏠" },
-            { key: "events", label: "🎪 Événements", icon: "🎪" },
-            { key: "reservations", label: "🎫 Réservations", icon: "🎫" },
-            { key: "profile", label: "👤 Profil", icon: "👤" }
-          ].map((tab) => (
-            <button
-              key={tab.key}
-              onClick={() => setActiveTab(tab.key)}
-              className={`flex-1 py-2 px-4 text-sm font-medium rounded-lg transition-all duration-200 ${
-                activeTab === tab.key
-                  ? 'bg-white text-primary-800 shadow-sm'
-                  : 'text-primary-600 hover:text-primary-800'
-              }`}
-            >
-              {tab.icon} {tab.label.split(' ')[1]}
-            </button>
-          ))}
+            { key: "dashboard", label: "🏠 Accueil", icon: "🏠", href: "" },
+            { key: "events", label: "🎪 Événements", icon: "🎪", href: "/dashboard/participant/events" },
+            { key: "reservations", label: "🎫 Réservations", icon: "🎫", href: "/dashboard/participant/reservations" },
+            { key: "profile", label: "👤 Profil", icon: "👤", href: "" }
+          ].map((tab) => {
+            if (tab.href) {
+              return (
+                <Link
+                  key={tab.key}
+                  href={tab.href}
+                  className="flex-1 py-2 px-4 text-sm font-medium rounded-lg transition-all duration-200 text-center text-primary-600 hover:text-primary-800 hover:bg-white"
+                >
+                  {tab.icon} {tab.label.split(' ')[1]}
+                </Link>
+              );
+            }
+            return (
+              <button
+                key={tab.key}
+                onClick={() => setActiveTab(tab.key)}
+                className={`flex-1 py-2 px-4 text-sm font-medium rounded-lg transition-all duration-200 ${
+                  activeTab === tab.key
+                    ? 'bg-white text-primary-800 shadow-sm'
+                    : 'text-primary-600 hover:text-primary-800'
+                }`}
+              >
+                {tab.icon} {tab.label.split(' ')[1]}
+              </button>
+            );
+          })}
         </div>
       </div>
 
@@ -243,6 +267,9 @@ export default function ParticipantDashboard() {
               <button className="btn-secondary text-sm">Filtrer</button>
               <Link href="/dashboard/participant/events" className="btn-primary text-sm">
                 Voir tous les événements
+              </Link>
+              <Link href="/dashboard/participant/reservations" className="btn-secondary text-sm">
+                📋 Mes réservations
               </Link>
             </div>
           </div>

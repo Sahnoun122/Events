@@ -13,15 +13,15 @@ export interface Reservation {
     date: Date;
     location: string;
     capacity: number;
+    category?: string;
   };
-  user: {
+  participant: {
     _id: string;
     fullName: string;
     email: string;
   };
   status: ReservationStatus;
-  reservationDate: Date;
-  notes?: string;
+  comment?: string;
   createdAt: Date;
   updatedAt: Date;
 }

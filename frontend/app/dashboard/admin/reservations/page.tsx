@@ -122,10 +122,6 @@ export default function ReservationsManagementPage() {
   };
 
   const handleRejectReservation = async (reservationId: string) => {
-    if (!confirm('Êtes-vous sûr de vouloir refuser cette réservation ?')) {
-      return;
-    }
-    
     try {
       setProcessingId(reservationId);
       await reservationsService.rejectReservation(reservationId);
@@ -138,10 +134,6 @@ export default function ReservationsManagementPage() {
   };
 
   const handleAdminCancelReservation = async (reservationId: string) => {
-    if (!confirm('Êtes-vous sûr de vouloir annuler cette réservation ? Cette action est irréversible.')) {
-      return;
-    }
-    
     try {
       setProcessingId(reservationId);
       await reservationsService.adminCancelReservation(reservationId);

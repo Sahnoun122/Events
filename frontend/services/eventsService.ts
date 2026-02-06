@@ -113,6 +113,11 @@ class EventsService {
       method: 'DELETE',
     });
   }
+
+  // Récupérer les statistiques des événements
+  async getEventStats(): Promise<any> {
+    return this.request('events/admin/stats');
+  }
 }
 
 export const eventsService = new EventsService();

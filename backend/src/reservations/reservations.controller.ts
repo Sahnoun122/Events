@@ -46,6 +46,46 @@ export class ReservationsController {
 
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.ADMIN)
+  @Get('admin/dashboard')
+  async getDashboardStats() {
+    const allReservations = await this.reservationsService.getAllReservations();
+    
+    const stats = {
+      total: allReservations.length,
+      pending: allReservations.filter(r => r.status === ReservationStatus.PENDING).length,
+      confirmed: allReservations.filter(r => r.status === ReservationStatus.CONFIRMED).length,
+      canceled: allReservations.filter(r => r.status === ReservationStatus.CANCELED).length,
+      refused: allReservations.filter(r => r.status === ReservationStatus.REFUSED).length,
+      
+      // Calcul du taux de remplissage moyen
+      byEvent: allReservations.reduce((acc, reservation) => {
+        const eventId = reservation.event._id || reservation.event;
+        if (!acc[eventId]) {
+          acc[eventId] = {
+            eventTitle: reservation.event.title || 'Événement',
+            capacity: reservation.event.capacity || 0,
+            confirmed: 0,
+            pending: 0,
+            total: 0
+          };
+        }
+        
+        acc[eventId].total++;
+        if (reservation.status === ReservationStatus.CONFIRMED) {
+          acc[eventId].confirmed++;
+        } else if (reservation.status === ReservationStatus.PENDING) {
+          acc[eventId].pending++;
+        }
+        
+        return acc;
+      }, {})
+    };
+    
+    return stats;
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN)
   @Get('stats')
   async getReservationStats() {
     const allReservations = await this.reservationsService.getAllReservations();

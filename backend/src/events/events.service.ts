@@ -81,4 +81,48 @@ export class EventsService {
     await event.deleteOne();
     return { message: 'Event deleted successfully' };
   }
+
+  async getEventStats() {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const totalEvents = await this.eventModel.countDocuments();
+    const publishedEvents = await this.eventModel.countDocuments({ 
+      status: EventStatus.PUBLISHED 
+    });
+    const upcomingEvents = await this.eventModel.countDocuments({ 
+      status: EventStatus.PUBLISHED,
+      date: { $gte: today }
+    });
+    const pastEvents = await this.eventModel.countDocuments({ 
+      status: EventStatus.PUBLISHED,
+      date: { $lt: today }
+    });
+    const draftEvents = await this.eventModel.countDocuments({ 
+      status: EventStatus.DRAFT 
+    });
+    const canceledEvents = await this.eventModel.countDocuments({ 
+      status: EventStatus.CANCELED 
+    });
+
+    // Récupérer les événements à venir avec leur capacité
+    const upcomingEventsData = await this.eventModel
+      .find({ 
+        status: EventStatus.PUBLISHED,
+        date: { $gte: today }
+      })
+      .sort({ date: 1 })
+      .limit(5)
+      .select('title date location capacity');
+
+    return {
+      totalEvents,
+      publishedEvents,
+      upcomingEvents,
+      pastEvents,
+      draftEvents,
+      canceledEvents,
+      upcomingEventsData
+    };
+  }
 }

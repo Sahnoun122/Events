@@ -112,7 +112,9 @@ class ReservationsService {
 
   // Confirmer une réservation
   async confirmReservation(id: string, notes?: string): Promise<Reservation> {
-    return this.updateReservationStatus(id, ReservationStatus.CONFIRMED, notes);
+    return this.request(`reservations/${id}/confirm`, {
+      method: 'PATCH',
+    });
   }
 
   // Refuser une réservation
@@ -146,6 +148,11 @@ class ReservationsService {
   // Récupérer les statistiques des réservations
   async getReservationStats(): Promise<ReservationStats> {
     return this.request('reservations/stats');
+  }
+
+  // Récupérer les statistiques du dashboard admin
+  async getDashboardStats(): Promise<any> {
+    return this.request('reservations/admin/dashboard');
   }
 }
 

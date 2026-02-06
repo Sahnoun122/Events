@@ -39,6 +39,13 @@ export class EventsController {
     return this.eventsService.create(dto);
   }
 
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN)
+  @Get('admin/stats')
+  async getEventsStats() {
+    return this.eventsService.getEventStats();
+  }
+
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.eventsService.findById(id);

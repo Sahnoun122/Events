@@ -1,362 +1,247 @@
-"use client";
+'use client';
 
-import { useState, useEffect } from "react";
-import Link from "next/link";
-import { useAuth } from "@/context/AuthContext";
-import { useRouter } from "next/navigation";
+import { useAuth } from '@/context/AuthContext';
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 
 export default function AdminDashboard() {
-  const { user, isLoading } = useAuth();
-  const [activeTab, setActiveTab] = useState("overview");
+  const { user } = useAuth();
   const router = useRouter();
 
-  // Protection de la page admin
   useEffect(() => {
-    if (!isLoading) {
-      if (!user) {
-        router.push('/auth/login');
-        return;
-      }
-      if (user.role !== 'admin') {
-        router.push('/dashboard/participant');
-        return;
-      }
+    // Rediriger si pas admin
+    if (user && user.role !== 'admin') {
+      router.push('/dashboard/participant');
     }
-  }, [user, isLoading, router]);
+  }, [user, router]);
 
-  // Afficher le loader pendant la vérification
-  if (isLoading || !user || user.role !== 'admin') {
+  if (!user) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-50 to-white">
-        <div className="text-center space-y-4">
-          <div className="w-16 h-16 mx-auto bg-gradient-to-br from-primary-200 to-primary-300 rounded-full flex items-center justify-center">
-            <span className="text-2xl font-bold text-primary-800">⚙️</span>
-          </div>
-          <div className="flex space-x-2 justify-center">
-            <div className="w-3 h-3 bg-primary-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
-            <div className="w-3 h-3 bg-primary-500 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
-            <div className="w-3 h-3 bg-primary-600 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
-          </div>
-          <div className="space-y-2">
-            <h2 className="text-xl font-semibold text-primary-800">Admin Panel</h2>
-            <p className="text-primary-600">
-              {isLoading ? "Vérification des permissions..." : 
-               !user ? "Connexion requise" : "Redirection vers votre espace..."}
-            </p>
-          </div>
+      <div className="min-h-screen bg-gradient-to-br from-primary-50 via-white to-secondary-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Chargement...</p>
         </div>
       </div>
     );
   }
 
-  const adminStats = [
-    { title: "Total Événements", value: "45", change: "+12%", icon: "📅", color: "bg-blue-50 text-blue-600" },
-    { title: "Utilisateurs Actifs", value: "1,234", change: "+5%", icon: "👥", color: "bg-green-50 text-green-600" },
-    { title: "Revenus ce mois", value: "€15,890", change: "+23%", icon: "💰", color: "bg-yellow-50 text-yellow-600" },
-    { title: "Tickets Vendus", value: "789", change: "+8%", icon: "🎫", color: "bg-purple-50 text-purple-600" }
-  ];
-
-  const recentEvents = [
-    { id: 1, title: "Conférence Tech 2026", organizer: "TechCorp", date: "2026-03-15", status: "confirmed", participants: 250 },
-    { id: 2, title: "Workshop Marketing", organizer: "MarketPro", date: "2026-03-20", status: "pending", participants: 85 },
-    { id: 3, title: "Meetup Startup", organizer: "StartupHub", date: "2026-03-25", status: "confirmed", participants: 150 },
-    { id: 4, title: "Formation Design", organizer: "DesignStudio", date: "2026-03-30", status: "draft", participants: 45 }
-  ];
-
-  const recentUsers = [
-    { id: 1, name: "Marie Dubois", email: "marie@example.com", role: "participant", joinDate: "2026-02-05" },
-    { id: 2, name: "Pierre Martin", email: "pierre@example.com", role: "organizer", joinDate: "2026-02-04" },
-    { id: 3, name: "Sophie Laurent", email: "sophie@example.com", role: "participant", joinDate: "2026-02-03" },
-    { id: 4, name: "Thomas Bernard", email: "thomas@example.com", role: "organizer", joinDate: "2026-02-02" }
-  ];
+  if (user.role !== 'admin') {
+    return null; // L'effet useEffect redirigera
+  }
 
   return (
-    <div className="space-y-6">
-      {/* Header avec onglets */}
-      <div className="glass-effect p-6 rounded-2xl">
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <h1 className="text-2xl font-bold text-primary-800 mb-2">
-              Panel d'administration
-            </h1>
-            <p className="text-primary-600">
-              Gérez votre plateforme d'événements
-            </p>
-          </div>
-          <div className="text-4xl">⚙️</div>
+    <div className="min-h-screen bg-gradient-to-br from-primary-50 via-white to-secondary-50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* En-tête */}
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+            Bonjour, {user.fullName} 👋
+          </h1>
+          <p className="text-gray-600">Bienvenue dans votre espace administrateur</p>
         </div>
 
-        {/* Navigation par onglets */}
-        <div className="flex space-x-1 bg-primary-100 p-1 rounded-xl">
-          {[
-            { key: "overview", label: "Vue d'ensemble", icon: "📊" },
-            { key: "events", label: "Événements", icon: "🎪" },
-            { key: "users", label: "Utilisateurs", icon: "👥" },
-            { key: "analytics", label: "Analytics", icon: "📈" }
-          ].map((tab) => (
-            <button
-              key={tab.key}
-              onClick={() => setActiveTab(tab.key)}
-              className={`flex-1 py-2 px-4 text-sm font-medium rounded-lg transition-all duration-200 ${
-                activeTab === tab.key
-                  ? 'bg-white text-primary-800 shadow-sm'
-                  : 'text-primary-600 hover:text-primary-800'
-              }`}
-            >
-              {tab.icon} {tab.label}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Contenu selon l'onglet actif */}
-      {activeTab === "overview" && (
-        <div className="space-y-6">
-          {/* Statistiques principales */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {adminStats.map((stat, index) => (
-              <div key={index} className="glass-effect p-6 rounded-2xl">
-                <div className="flex items-center justify-between mb-4">
-                  <div className={`p-3 rounded-xl text-2xl ${stat.color}`}>
-                    {stat.icon}
-                  </div>
-                  <span className="text-sm font-semibold text-green-600">{stat.change}</span>
-                </div>
-                <h3 className="text-2xl font-bold text-primary-800">{stat.value}</h3>
-                <p className="text-primary-600">{stat.title}</p>
+        {/* Statistiques */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          {/* Total des événements */}
+          <div className="bg-white/70 backdrop-blur-sm border border-primary-100 p-6 rounded-xl shadow-sm">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-600">Événements totaux</p>
+                <p className="text-3xl font-bold text-primary-600">24</p>
               </div>
-            ))}
-          </div>
-
-          {/* Aperçu des événements récents */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div className="glass-effect p-6 rounded-2xl">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-xl font-bold text-primary-800">Événements récents</h2>
-                <Link href="/dashboard/admin/events" className="btn-secondary text-sm">
-                  Voir tous
-                </Link>
-              </div>
-              <div className="space-y-3">
-                {recentEvents.slice(0, 3).map((event) => (
-                  <div key={event.id} className="bg-white p-4 rounded-xl border border-primary-200">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <h3 className="font-semibold text-primary-800">{event.title}</h3>
-                        <p className="text-sm text-primary-600">{event.organizer} • {event.date}</p>
-                      </div>
-                      <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
-                        event.status === 'confirmed' ? 'bg-green-100 text-green-800' :
-                        event.status === 'pending' ? 'bg-orange-100 text-orange-800' :
-                        'bg-gray-100 text-gray-800'
-                      }`}>
-                        {event.status}
-                      </span>
-                    </div>
-                  </div>
-                ))}
+              <div className="w-12 h-12 bg-primary-100 rounded-lg flex items-center justify-center">
+                <svg className="w-6 h-6 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
               </div>
             </div>
-
-            <div className="glass-effect p-6 rounded-2xl">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-xl font-bold text-primary-800">Nouveaux utilisateurs</h2>
-                <Link href="/dashboard/admin/users" className="btn-secondary text-sm">
-                  Gérer
-                </Link>
-              </div>
-              <div className="space-y-3">
-                {recentUsers.slice(0, 3).map((user) => (
-                  <div key={user.id} className="bg-white p-4 rounded-xl border border-primary-200">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <h3 className="font-semibold text-primary-800">{user.name}</h3>
-                        <p className="text-sm text-primary-600">{user.email}</p>
-                      </div>
-                      <span className="text-xs text-primary-500">{user.role}</span>
-                    </div>
-                  </div>
-                ))}
+            <div className="mt-4">
+              <div className="flex items-center text-sm">
+                <span className="text-green-500 flex items-center">
+                  <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 10l7-7m0 0l7 7m-7-7v18" />
+                  </svg>
+                  +12%
+                </span>
+                <span className="ml-2 text-gray-500">vs mois dernier</span>
               </div>
             </div>
           </div>
 
+          {/* Participants */}
+          <div className="bg-white/70 backdrop-blur-sm border border-primary-100 p-6 rounded-xl shadow-sm">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-600">Participants</p>
+                <p className="text-3xl font-bold text-secondary-600">156</p>
+              </div>
+              <div className="w-12 h-12 bg-secondary-100 rounded-lg flex items-center justify-center">
+                <svg className="w-6 h-6 text-secondary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                </svg>
+              </div>
+            </div>
+            <div className="mt-4">
+              <div className="flex items-center text-sm">
+                <span className="text-green-500 flex items-center">
+                  <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 10l7-7m0 0l7 7m-7-7v18" />
+                  </svg>
+                  +8%
+                </span>
+                <span className="ml-2 text-gray-500">vs mois dernier</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Réservations */}
+          <div className="bg-white/70 backdrop-blur-sm border border-primary-100 p-6 rounded-xl shadow-sm">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-600">Réservations</p>
+                <p className="text-3xl font-bold text-green-600">89</p>
+              </div>
+              <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+                <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                </svg>
+              </div>
+            </div>
+            <div className="mt-4">
+              <div className="flex items-center text-sm">
+                <span className="text-green-500 flex items-center">
+                  <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 10l7-7m0 0l7 7m-7-7v18" />
+                  </svg>
+                  +23%
+                </span>
+                <span className="ml-2 text-gray-500">vs mois dernier</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Revenus */}
+          <div className="bg-white/70 backdrop-blur-sm border border-primary-100 p-6 rounded-xl shadow-sm">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-600">Revenus</p>
+                <p className="text-3xl font-bold text-amber-600">€2,840</p>
+              </div>
+              <div className="w-12 h-12 bg-amber-100 rounded-lg flex items-center justify-center">
+                <svg className="w-6 h-6 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
+                </svg>
+              </div>
+            </div>
+            <div className="mt-4">
+              <div className="flex items-center text-sm">
+                <span className="text-green-500 flex items-center">
+                  <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 10l7-7m0 0l7 7m-7-7v18" />
+                  </svg>
+                  +15%
+                </span>
+                <span className="ml-2 text-gray-500">vs mois dernier</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Gestion des événements */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
           {/* Actions rapides */}
-          <div className="glass-effect p-6 rounded-2xl">
-            <h2 className="text-xl font-bold text-primary-800 mb-6">Actions rapides</h2>
-            <div className="flex items-center justify-between mb-6">
-              <div className="flex space-x-2">
-                <Link href="/dashboard/admin/statistics" className="btn-secondary text-sm">
-                  📊 Rapport mensuel
-                </Link>
-                <button className="btn-secondary text-sm">
-                  ⚙️ Paramètres
-                </button>
-              </div>
+          <div className="bg-white/70 backdrop-blur-sm border border-primary-100 p-6 rounded-xl shadow-sm">
+            <h3 className="text-lg font-semibold text-gray-900 mb-6">Actions rapides</h3>
+            <div className="space-y-4">
+              <Link 
+                href="/dashboard/admin/events"
+                className="w-full flex items-center justify-between p-4 bg-gradient-to-r from-primary-500 to-primary-600 text-white rounded-lg hover:from-primary-600 hover:to-primary-700 transition-all duration-200 group"
+              >
+                <div className="flex items-center space-x-3">
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                  <span className="font-medium">Gérer les événements</span>
+                </div>
+                <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </Link>
+
+              <button className="w-full flex items-center justify-between p-4 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-all duration-200 group">
+                <div className="flex items-center space-x-3">
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                  <span className="font-medium">Rapports et statistiques</span>
+                </div>
+                <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </button>
+
+              <button className="w-full flex items-center justify-between p-4 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-all duration-200 group">
+                <div className="flex items-center space-x-3">
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                  </svg>
+                  <span className="font-medium">Gérer les utilisateurs</span>
+                </div>
+                <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </button>
             </div>
           </div>
-        </div>
-      )}
 
-      {activeTab === "events" && (
-        <div className="glass-effect p-6 rounded-2xl">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl font-bold text-primary-800">Gestion des événements</h2>
-            <div className="flex space-x-2">
-              <button className="btn-secondary text-sm">Filtrer</button>
-              <Link href="/dashboard/admin/events/create" className="btn-primary text-sm">
-                ➕ Nouvel événement
+          {/* Événements récents */}
+          <div className="bg-white/70 backdrop-blur-sm border border-primary-100 p-6 rounded-xl shadow-sm">
+            <h3 className="text-lg font-semibold text-gray-900 mb-6">Événements récents</h3>
+            <div className="space-y-4">
+              {[
+                { name: 'Conférence Tech 2024', date: '15 Mars 2024', status: 'Publié', participants: 45 },
+                { name: 'Atelier React', date: '20 Mars 2024', status: 'Brouillon', participants: 0 },
+                { name: 'Meetup JavaScript', date: '25 Mars 2024', status: 'Publié', participants: 23 }
+              ].map((event, index) => (
+                <div key={index} className="flex items-center justify-between p-4 bg-gray-50/50 rounded-lg">
+                  <div>
+                    <h4 className="font-medium text-gray-900">{event.name}</h4>
+                    <p className="text-sm text-gray-600">{event.date} • {event.participants} participants</p>
+                  </div>
+                  <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+                    event.status === 'Publié' 
+                      ? 'bg-green-100 text-green-800' 
+                      : 'bg-yellow-100 text-yellow-800'
+                  }`}>
+                    {event.status}
+                  </span>
+                </div>
+              ))}
+            </div>
+            <div className="mt-4">
+              <Link 
+                href="/dashboard/admin/events"
+                className="text-primary-600 hover:text-primary-800 text-sm font-medium"
+              >
+                Voir tous les événements →
               </Link>
             </div>
           </div>
-          
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-primary-50 text-primary-800">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Événement</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Organisateur</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Date</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Statut</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Participants</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-primary-200">
-                {recentEvents.map((event) => (
-                  <tr key={event.id}>
-                    <td className="px-6 py-4 whitespace-nowrap font-medium text-primary-800">{event.title}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-primary-600">{event.organizer}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-primary-600">{event.date}</td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
-                        event.status === 'confirmed' ? 'bg-green-100 text-green-800' :
-                        event.status === 'pending' ? 'bg-orange-100 text-orange-800' :
-                        'bg-gray-100 text-gray-800'
-                      }`}>
-                        {event.status}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-primary-600">{event.participants}</td>
-                    <td className="px-6 py-4">
-                      <div className="flex space-x-2">
-                        <Link href={`/dashboard/admin/events/${event.id}`} className="text-primary-600 hover:text-primary-800 text-sm">
-                          Voir
-                        </Link>
-                        <Link href={`/dashboard/admin/events/${event.id}/edit`} className="text-blue-600 hover:text-blue-800 text-sm">
-                          Modifier
-                        </Link>
-                        <button className="text-red-600 hover:text-red-800 text-sm">Supprimer</button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+        </div>
+
+        {/* Graphiques et analytics */}
+        <div className="bg-white/70 backdrop-blur-sm border border-primary-100 p-6 rounded-xl shadow-sm">
+          <h3 className="text-lg font-semibold text-gray-900 mb-6">Analytics</h3>
+          <div className="text-center text-gray-500 py-8">
+            <svg className="w-16 h-16 mx-auto mb-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+            </svg>
+            <p>Graphiques et analytics à venir</p>
           </div>
         </div>
-      )}
-
-      {activeTab === "users" && (
-        <div className="glass-effect p-6 rounded-2xl">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl font-bold text-primary-800">Gestion des utilisateurs</h2>
-            <div className="flex space-x-2">
-              <button className="btn-secondary text-sm">Filtrer</button>
-              <button className="btn-primary text-sm">➕ Inviter utilisateur</button>
-            </div>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {recentUsers.map((user) => (
-              <div key={user.id} className="bg-white p-6 rounded-xl border border-primary-200">
-                <div className="flex items-center space-x-4 mb-4">
-                  <div className="w-12 h-12 bg-gradient-to-br from-primary-200 to-primary-300 rounded-full flex items-center justify-center">
-                    <span className="font-bold text-primary-800">{user.name.charAt(0)}</span>
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-primary-800">{user.name}</h3>
-                    <p className="text-sm text-primary-600">{user.email}</p>
-                  </div>
-                </div>
-                <div className="flex items-center justify-between text-sm mb-4">
-                  <span className="text-primary-600">Rôle:</span>
-                  <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
-                    user.role === 'admin' ? 'bg-red-100 text-red-800' :
-                    user.role === 'organizer' ? 'bg-blue-100 text-blue-800' :
-                    'bg-green-100 text-green-800'
-                  }`}>
-                    {user.role}
-                  </span>
-                </div>
-                <p className="text-xs text-primary-500 mb-4">Membre depuis: {user.joinDate}</p>
-                <div className="flex space-x-2">
-                  <Link href="/dashboard/admin/reservations" className="btn-secondary text-sm">
-                    Profil
-                  </Link>
-                  <Link href={`/dashboard/admin/users/${user.id}`} className="text-primary-600 hover:text-primary-800 text-sm">
-                    Modifier
-                  </Link>
-                  <button className="text-red-600 hover:text-red-800 text-sm">Désactiver</button>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {activeTab === "analytics" && (
-        <div className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="glass-effect p-6 rounded-2xl">
-              <h2 className="text-xl font-bold text-primary-800 mb-6">Événements par mois</h2>
-              <div className="bg-white p-6 rounded-lg border border-primary-200">
-                <div className="h-64 bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg flex items-center justify-center">
-                  <div className="text-center">
-                    <div className="text-4xl mb-2">📊</div>
-                    <p className="text-blue-600">Graphique des événements</p>
-                    <p className="text-sm text-blue-500">+15% vs mois dernier</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-            
-            <div className="glass-effect p-6 rounded-2xl">
-              <h2 className="text-xl font-bold text-primary-800 mb-6">Revenus mensuels</h2>
-              <div className="bg-white p-6 rounded-lg border border-primary-200">
-                <div className="h-64 bg-gradient-to-br from-green-50 to-green-100 rounded-lg flex items-center justify-center">
-                  <div className="text-center">
-                    <div className="text-4xl mb-2">💰</div>
-                    <p className="text-green-600">€15,890</p>
-                    <p className="text-sm text-green-500">+23% vs mois dernier</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="glass-effect p-6 rounded-2xl">
-            <h2 className="text-xl font-bold text-primary-800 mb-6">Métriques détaillées</h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="bg-white p-6 rounded-xl border border-primary-200 text-center">
-                <div className="text-3xl mb-2">⭐</div>
-                <div className="text-2xl font-bold text-primary-800">4.8</div>
-                <p className="text-primary-600">Note moyenne</p>
-              </div>
-              <div className="bg-white p-6 rounded-xl border border-primary-200 text-center">
-                <div className="text-3xl mb-2">🔄</div>
-                <div className="text-2xl font-bold text-primary-800">85%</div>
-                <p className="text-primary-600">Taux de rétention</p>
-              </div>
-              <div className="bg-white p-6 rounded-xl border border-primary-200 text-center">
-                <div className="text-3xl mb-2">📈</div>
-                <div className="text-2xl font-bold text-primary-800">+42%</div>
-                <p className="text-primary-600">Croissance</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      </div>
     </div>
   );
 }

@@ -1,286 +1,304 @@
-"use client";
+'use client';
 
-import { useState } from "react";
-import Link from "next/link";
+import { useAuth } from '@/context/AuthContext';
+import { useEffect, useState } from 'react';
+import { Event, EventStatus } from '@/types/event';
+import { eventsService } from '@/services/eventsService';
+import CreateEventModal from '../components/CreateEventModal';
+import EditEventModal from '../components/EditEventModal';
+import EventCard from '../components/EventCard';
 
-export default function ManageEventsPage() {
-  const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState("all");
-  const [categoryFilter, setCategoryFilter] = useState("all");
+export default function EventsManagementPage() {
+  const { user } = useAuth();
+  const [events, setEvents] = useState<Event[]>([]);
+  const [filteredEvents, setFilteredEvents] = useState<Event[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [activeFilter, setActiveFilter] = useState<'all' | EventStatus>('all');
+  const [searchTerm, setSearchTerm] = useState('');
+  
+  // Modals
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editingEvent, setEditingEvent] = useState<Event | null>(null);
 
-  const events = [
-    {
-      id: 1,
-      title: "Conférence Tech 2026",
-      organizer: "TechCorp",
-      date: "2026-03-15",
-      time: "09:00",
-      location: "Paris Convention Center",
-      status: "published",
-      category: "Technologie",
-      participants: 250,
-      maxParticipants: 300,
-      price: "€125",
-      created: "2026-02-01"
-    },
-    {
-      id: 2,
-      title: "Workshop Marketing Digital",
-      organizer: "MarketPro",
-      date: "2026-03-20",
-      time: "14:00",
-      location: "Centre Formation Marseille",
-      status: "draft",
-      category: "Marketing",
-      participants: 45,
-      maxParticipants: 100,
-      price: "€89",
-      created: "2026-02-03"
-    },
-    {
-      id: 3,
-      title: "Meetup Entrepreneurs",
-      organizer: "StartupHub",
-      date: "2026-03-25",
-      time: "18:30",
-      location: "Business Center Nice",
-      status: "published",
-      category: "Business",
-      participants: 150,
-      maxParticipants: 200,
-      price: "€75",
-      created: "2026-02-02"
-    },
-    {
-      id: 4,
-      title: "Formation Design UX",
-      organizer: "DesignStudio",
-      date: "2026-04-01",
-      time: "10:00",
-      location: "Studio Créatif Lyon",
-      status: "pending",
-      category: "Design",
-      participants: 30,
-      maxParticipants: 50,
-      price: "€150",
-      created: "2026-02-04"
-    }
-  ];
-
-  const filteredEvents = events.filter(event => {
-    const matchesSearch = event.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         event.organizer.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = statusFilter === "all" || event.status === statusFilter;
-    const matchesCategory = categoryFilter === "all" || event.category === categoryFilter;
-    
-    return matchesSearch && matchesStatus && matchesCategory;
-  });
-
-  const getStatusBadge = (status: string) => {
-    switch(status) {
-      case 'published':
-        return 'bg-green-100 text-green-800';
-      case 'draft':
-        return 'bg-gray-100 text-gray-800';
-      case 'pending':
-        return 'bg-yellow-100 text-yellow-800';
-      case 'cancelled':
-        return 'bg-red-100 text-red-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
+  const loadEvents = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const eventsData = await eventsService.getAllEvents();
+      setEvents(eventsData);
+    } catch (error) {
+      setError(error instanceof Error ? error.message : 'Erreur lors du chargement des événements');
+    } finally {
+      setLoading(false);
     }
   };
 
+  useEffect(() => {
+    loadEvents();
+  }, []);
+
+  // Filtrer les événements
+  useEffect(() => {
+    let filtered = events;
+
+    // Filtre par statut
+    if (activeFilter !== 'all') {
+      filtered = filtered.filter(event => event.status === activeFilter);
+    }
+
+    // Filtre par recherche
+    if (searchTerm) {
+      filtered = filtered.filter(event =>
+        event.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        event.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        event.location.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+
+    setFilteredEvents(filtered);
+  }, [events, activeFilter, searchTerm]);
+
+  const handleEditEvent = (event: Event) => {
+    setEditingEvent(event);
+    setIsEditModalOpen(true);
+  };
+
+  const getEventStats = () => {
+    const total = events.length;
+    const published = events.filter(event => event.status === EventStatus.PUBLISHED).length;
+    const draft = events.filter(event => event.status === EventStatus.DRAFT).length;
+    const canceled = events.filter(event => event.status === EventStatus.CANCELED).length;
+    
+    return { total, published, draft, canceled };
+  };
+
+  const stats = getEventStats();
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-primary-50 via-white to-secondary-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="flex items-center justify-center h-64">
+            <div className="flex items-center space-x-4">
+              <svg className="animate-spin w-8 h-8 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" className="opacity-25" />
+                <path fill="currentColor" className="opacity-75" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+              </svg>
+              <span className="text-lg text-gray-600">Chargement des événements...</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="space-y-6">
-      {/* Header avec titre et bouton d'ajout */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-primary-800">Gestion des Événements</h1>
-          <p className="text-primary-600 mt-1">Créez, modifiez et gérez tous vos événements</p>
-        </div>
-        <Link href="/dashboard/admin/events/create" className="btn-primary">
-          ➕ Nouvel Événement
-        </Link>
-      </div>
-
-      {/* Filtres et recherche */}
-      <div className="glass-effect p-6 rounded-2xl">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <div className="md:col-span-2">
-            <label className="block text-sm font-medium text-primary-700 mb-2">
-              Rechercher un événement
-            </label>
-            <input
-              type="text"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="Nom de l'événement ou organisateur..."
-              className="w-full px-4 py-2 border border-primary-200 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-            />
-          </div>
-          
-          <div>
-            <label className="block text-sm font-medium text-primary-700 mb-2">
-              Statut
-            </label>
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              className="w-full px-4 py-2 border border-primary-200 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+    <div className="min-h-screen bg-gradient-to-br from-primary-50 via-white to-secondary-50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* En-tête */}
+        <div className="mb-8">
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-6">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900 mb-2">
+                🎪 Gestion des Événements
+              </h1>
+              <p className="text-gray-600">
+                Créez, modifiez, publiez et gérez tous vos événements en un seul endroit
+              </p>
+            </div>
+            <button
+              onClick={() => setIsCreateModalOpen(true)}
+              className="mt-4 lg:mt-0 bg-gradient-to-r from-primary-600 to-secondary-600 text-white px-6 py-3 rounded-lg hover:from-primary-700 hover:to-secondary-700 focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 transition-all duration-200 flex items-center space-x-2 shadow-lg"
             >
-              <option value="all">Tous les statuts</option>
-              <option value="published">Publié</option>
-              <option value="draft">Brouillon</option>
-              <option value="pending">En attente</option>
-              <option value="cancelled">Annulé</option>
-            </select>
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+              </svg>
+              <span>Nouvel Événement</span>
+            </button>
           </div>
-          
-          <div>
-            <label className="block text-sm font-medium text-primary-700 mb-2">
-              Catégorie
-            </label>
-            <select
-              value={categoryFilter}
-              onChange={(e) => setCategoryFilter(e.target.value)}
-              className="w-full px-4 py-2 border border-primary-200 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-            >
-              <option value="all">Toutes catégories</option>
-              <option value="Technologie">Technologie</option>
-              <option value="Marketing">Marketing</option>
-              <option value="Business">Business</option>
-              <option value="Design">Design</option>
-            </select>
-          </div>
-        </div>
-      </div>
 
-      {/* Statistiques rapides */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <div className="glass-effect p-6 rounded-2xl text-center">
-          <div className="text-2xl mb-2">📅</div>
-          <div className="text-2xl font-bold text-primary-800">{events.length}</div>
-          <p className="text-primary-600">Total Événements</p>
-        </div>
-        <div className="glass-effect p-6 rounded-2xl text-center">
-          <div className="text-2xl mb-2">✅</div>
-          <div className="text-2xl font-bold text-green-600">                {events.filter(e => e.status === 'published').length}
-          </div>
-          <p className="text-primary-600">Publiés</p>
-        </div>
-        <div className="glass-effect p-6 rounded-2xl text-center">
-          <div className="text-2xl mb-2">👥</div>
-          <div className="text-2xl font-bold text-blue-600">
-            {events.reduce((sum, e) => sum + e.participants, 0)}
-          </div>
-          <p className="text-primary-600">Participants Total</p>
-        </div>
-        <div className="glass-effect p-6 rounded-2xl text-center">
-          <div className="text-2xl mb-2">💰</div>
-          <div className="text-2xl font-bold text-yellow-600">€15,890</div>
-          <p className="text-primary-600">Revenus du mois</p>
-        </div>
-      </div>
-
-      {/* Liste des événements */}
-      <div className="glass-effect p-6 rounded-2xl">
-        <div className="mb-4">
-          <h2 className="text-xl font-bold text-primary-800 mb-2">Événements ({filteredEvents.length})</h2>
-          <p className="text-primary-600">Gérez vos événements ci-dessous</p>
-        </div>
-
-        {filteredEvents.length === 0 ? (
-          <div className="text-center py-12">
-            <div className="text-6xl mb-4">😔</div>
-            <h3 className="text-xl font-semibold text-primary-800 mb-2">Aucun événement trouvé</h3>
-            <p className="text-primary-600 mb-6">Essayez de modifier vos filtres ou créez un nouvel événement</p>
-            <Link href="/dashboard/admin/events/create" className="btn-primary">
-              Créer un événement
-            </Link>
-          </div>
-        ) : (
-          <div className="space-y-4">
-            {filteredEvents.map((event) => (
-              <div key={event.id} className="bg-white p-6 rounded-xl border border-primary-200 hover:shadow-md transition-shadow">
-                <div className="flex items-center justify-between">
-                  <div className="flex-1">
-                    <div className="flex items-center space-x-3 mb-3">
-                      <h3 className="text-lg font-bold text-primary-800">{event.title}</h3>
-                      <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusBadge(event.status)}`}>
-                        {event.status === 'published' ? 'Publié' :
-                         event.status === 'draft' ? 'Brouillon' :
-                         event.status === 'pending' ? 'En attente' : 'Annulé'}
-                      </span>
-                      <span className="px-2 py-1 bg-primary-100 text-primary-800 rounded-full text-xs">
-                        {event.category}
-                      </span>
-                    </div>
-                    
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm text-primary-600">
-                      <div className="flex items-center">
-                        <span className="w-4 mr-2">👤</span>
-                        <span>{event.organizer}</span>
-                      </div>
-                      <div className="flex items-center">
-                        <span className="w-4 mr-2">📅</span>
-                        <span>{event.date} à {event.time}</span>
-                      </div>
-                      <div className="flex items-center">
-                        <span className="w-4 mr-2">📍</span>
-                        <span>{event.location}</span>
-                      </div>
-                      <div className="flex items-center">
-                        <span className="w-4 mr-2">👥</span>
-                        <span>{event.participants}/{event.maxParticipants} participants</span>
-                      </div>
-                      <div className="flex items-center">
-                        <span className="w-4 mr-2">💰</span>
-                        <span>{event.price}</span>
-                      </div>
-                      <div className="flex items-center">
-                        <span className="w-4 mr-2">📝</span>
-                        <span>Créé le {event.created}</span>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div className="flex flex-col space-y-2 ml-6">
-                    <Link 
-                      href={`/dashboard/admin/events/${event.id}`}
-                      className="btn-secondary text-sm text-center"
-                    >
-                      📊 Voir détails
-                    </Link>
-                    <Link 
-                      href={`/dashboard/admin/events/${event.id}/edit`}
-                      className="btn-primary text-sm text-center"
-                    >
-                      ✏️ Modifier
-                    </Link>
-                    <button className="text-red-600 hover:text-red-800 text-sm px-3 py-1 border border-red-200 rounded-lg hover:bg-red-50">
-                      🗑️ Supprimer
-                    </button>
-                  </div>
+          {/* Statistiques */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+            <div className="bg-white/70 backdrop-blur-sm border border-primary-100 p-4 rounded-xl shadow-sm">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-600">Total</p>
+                  <p className="text-2xl font-bold text-gray-900">{stats.total}</p>
                 </div>
-                
-                {/* Barre de progression des inscriptions */}
-                <div className="mt-4">
-                  <div className="flex items-center justify-between text-sm text-primary-600 mb-1">
-                    <span>Taux de remplissage</span>
-                    <span>{Math.round((event.participants / event.maxParticipants) * 100)}%</span>
-                  </div>
-                  <div className="w-full bg-primary-100 rounded-full h-2">
-                    <div 
-                      className="bg-primary-600 h-2 rounded-full transition-all duration-300"
-                      style={{ width: `${(event.participants / event.maxParticipants) * 100}%` }}
-                    ></div>
-                  </div>
+                <div className="w-10 h-10 bg-primary-100 rounded-lg flex items-center justify-center">
+                  <svg className="w-5 h-5 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
                 </div>
               </div>
+            </div>
+
+            <div className="bg-white/70 backdrop-blur-sm border border-primary-100 p-4 rounded-xl shadow-sm">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-600">Publiés</p>
+                  <p className="text-2xl font-bold text-green-600">{stats.published}</p>
+                </div>
+                <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
+                  <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white/70 backdrop-blur-sm border border-primary-100 p-4 rounded-xl shadow-sm">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-600">Brouillons</p>
+                  <p className="text-2xl font-bold text-yellow-600">{stats.draft}</p>
+                </div>
+                <div className="w-10 h-10 bg-yellow-100 rounded-lg flex items-center justify-center">
+                  <svg className="w-5 h-5 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                  </svg>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white/70 backdrop-blur-sm border border-primary-100 p-4 rounded-xl shadow-sm">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-600">Annulés</p>
+                  <p className="text-2xl font-bold text-red-600">{stats.canceled}</p>
+                </div>
+                <div className="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center">
+                  <svg className="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Filtres et Recherche */}
+        <div className="bg-white/70 backdrop-blur-sm border border-primary-100 p-6 rounded-xl shadow-sm mb-6">
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+            {/* Barre de recherche */}
+            <div className="relative flex-1 max-w-md">
+              <svg className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+              <input
+                type="text"
+                placeholder="Rechercher des événements..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200"
+              />
+            </div>
+
+            {/* Filtres par statut */}
+            <div className="flex flex-wrap gap-2">
+              {[
+                { key: 'all', label: 'Tous', count: stats.total },
+                { key: EventStatus.PUBLISHED, label: 'Publiés', count: stats.published },
+                { key: EventStatus.DRAFT, label: 'Brouillons', count: stats.draft },
+                { key: EventStatus.CANCELED, label: 'Annulés', count: stats.canceled },
+              ].map((filter) => (
+                <button
+                  key={filter.key}
+                  onClick={() => setActiveFilter(filter.key as any)}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 flex items-center space-x-2 ${
+                    activeFilter === filter.key
+                      ? 'bg-primary-600 text-white'
+                      : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-300'
+                  }`}
+                >
+                  <span>{filter.label}</span>
+                  <span className={`px-2 py-1 rounded-full text-xs ${
+                    activeFilter === filter.key
+                      ? 'bg-white/20 text-white'
+                      : 'bg-gray-100 text-gray-600'
+                  }`}>
+                    {filter.count}
+                  </span>
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Message d'erreur */}
+        {error && (
+          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-6 flex items-center space-x-2">
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <span>{error}</span>
+            <button 
+              onClick={loadEvents}
+              className="ml-auto text-red-800 hover:text-red-900 underline"
+            >
+              Réessayer
+            </button>
+          </div>
+        )}
+
+        {/* Liste des événements */}
+        {filteredEvents.length === 0 && !loading ? (
+          <div className="bg-white/70 backdrop-blur-sm border border-primary-100 rounded-xl shadow-sm p-12 text-center">
+            <svg className="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+            <h3 className="text-xl font-semibold text-gray-900 mb-2">
+              {searchTerm || activeFilter !== 'all' ? 'Aucun événement trouvé' : 'Aucun événement créé'}
+            </h3>
+            <p className="text-gray-600 mb-6">
+              {searchTerm || activeFilter !== 'all' 
+                ? 'Essayez de modifier vos critères de recherche ou de filtres.'
+                : 'Commencez par créer votre premier événement pour engager votre communauté.'
+              }
+            </p>
+            {!searchTerm && activeFilter === 'all' && (
+              <button
+                onClick={() => setIsCreateModalOpen(true)}
+                className="bg-gradient-to-r from-primary-600 to-secondary-600 text-white px-6 py-3 rounded-lg hover:from-primary-700 hover:to-secondary-700 focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 transition-all duration-200 inline-flex items-center space-x-2"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                </svg>
+                <span>Créer mon premier événement</span>
+              </button>
+            )}
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+            {filteredEvents.map((event) => (
+              <EventCard
+                key={event._id}
+                event={event}
+                onEventUpdated={loadEvents}
+                onEditEvent={handleEditEvent}
+              />
             ))}
           </div>
         )}
+
+        {/* Modals */}
+        <CreateEventModal
+          isOpen={isCreateModalOpen}
+          onClose={() => setIsCreateModalOpen(false)}
+          onEventCreated={loadEvents}
+        />
+
+        <EditEventModal
+          isOpen={isEditModalOpen}
+          event={editingEvent}
+          onClose={() => {
+            setIsEditModalOpen(false);
+            setEditingEvent(null);
+          }}
+          onEventUpdated={loadEvents}
+        />
       </div>
     </div>
   );

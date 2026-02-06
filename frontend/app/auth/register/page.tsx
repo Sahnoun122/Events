@@ -1,7 +1,8 @@
 "use client";
 
-import { useAuth } from "@/context/AuthContext";
 import { useState } from "react";
+import Link from "next/link";
+import { useAuth } from "@/context/AuthContext";
 
 export default function RegisterPage() {
   const authContext = useAuth();
@@ -11,149 +12,228 @@ export default function RegisterPage() {
   }
   
   const { register } = authContext;
-
-  const [form, setForm] = useState({
+  
+  const [formData, setFormData] = useState({
     fullName: "",
     email: "",
     password: "",
+    confirmPassword: "",
+    acceptTerms: false
   });
-
-  const [loading, setLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setForm({
-      ...form,
-      [e.target.name]: e.target.value,
-    });
+    const { name, value, type, checked } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: type === "checkbox" ? checked : value
+    }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
 
-    if (!form.fullName || !form.email || !form.password) {
-      setError("Tous les champs sont obligatoires");
+    if (!formData.fullName || !formData.email || !formData.password || !formData.confirmPassword) {
+      setError("Veuillez remplir tous les champs");
       return;
     }
 
-    if (form.password.length < 6) {
-      setError("Mot de passe minimum 6 caractères");
+    if (formData.password !== formData.confirmPassword) {
+      setError("Les mots de passe ne correspondent pas");
+      return;
+    }
+
+    if (formData.password.length < 6) {
+      setError("Le mot de passe doit contenir au moins 6 caractères");
+      return;
+    }
+
+    if (!formData.acceptTerms) {
+      setError("Veuillez accepter les conditions d'utilisation");
       return;
     }
 
     try {
-      setLoading(true);
-      await register(form.fullName, form.email, form.password);
+      setIsLoading(true);
+      await register(formData.fullName, formData.email, formData.password);
     } catch (err) {
-      setError("Erreur lors de l’inscription");
+      setError("Erreur lors de l'inscription. Veuillez réessayer.");
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 to-emerald-100 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gradient-beige flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
-        <div>
-          <h1 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-            Inscription
-          </h1>
-          <p className="mt-2 text-center text-sm text-gray-600">
-            Créez votre compte pour accéder aux événements
+        {/* Header */}
+        <div className="text-center">
+          <Link href="/" className="inline-flex items-center space-x-2 mb-8">
+            <div className="w-10 h-10 bg-primary-600 rounded-full flex items-center justify-center">
+              <span className="text-white font-bold">E</span>
+            </div>
+            <span className="text-2xl font-bold text-primary-800">EventsPro</span>
+          </Link>
+          <h2 className="text-3xl font-bold text-primary-900 mb-2">
+            Rejoignez-nous !
+          </h2>
+          <p className="text-primary-600">
+            Créez votre compte et commencez à organiser des événements exceptionnels
           </p>
         </div>
-        
-        <div className="bg-white rounded-lg shadow-md p-8">
-          <form className="space-y-6" onSubmit={handleSubmit} noValidate>
+
+        {/* Form */}
+        <div className="glass-effect p-8 rounded-2xl shadow-lg">
+          {error && (
+            <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded-lg">
+              {error}
+            </div>
+          )}
+          
+          <form className="space-y-6" onSubmit={handleSubmit}>
             <div>
-              <label 
-                htmlFor="fullName" 
-                className="block text-sm font-medium text-gray-700 mb-2"
-              >
+              <label htmlFor="fullName" className="block text-sm font-medium text-primary-700 mb-1">
                 Nom complet
               </label>
               <input
                 id="fullName"
                 name="fullName"
                 type="text"
-                value={form.fullName}
-                onChange={handleChange}
                 required
-                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition duration-150 ease-in-out"
-                placeholder="Jean Dupont"
+                value={formData.fullName}
+                onChange={handleChange}
+                className="w-full px-4 py-3 border border-primary-200 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all"
+                placeholder="Votre nom complet"
               />
             </div>
 
             <div>
-              <label 
-                htmlFor="email" 
-                className="block text-sm font-medium text-gray-700 mb-2"
-              >
+              <label htmlFor="email" className="block text-sm font-medium text-primary-700 mb-1">
                 Adresse email
               </label>
               <input
                 id="email"
                 name="email"
                 type="email"
-                value={form.email}
-                onChange={handleChange}
                 required
-                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition duration-150 ease-in-out"
+                value={formData.email}
+                onChange={handleChange}
+                className="w-full px-4 py-3 border border-primary-200 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all"
                 placeholder="votre@email.com"
               />
             </div>
 
             <div>
-              <label 
-                htmlFor="password" 
-                className="block text-sm font-medium text-gray-700 mb-2"
-              >
+              <label htmlFor="password" className="block text-sm font-medium text-primary-700 mb-1">
                 Mot de passe
               </label>
               <input
                 id="password"
                 name="password"
                 type="password"
-                value={form.password}
-                onChange={handleChange}
                 required
-                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition duration-150 ease-in-out"
-                placeholder="••••••••"
+                value={formData.password}
+                onChange={handleChange}
+                className="w-full px-4 py-3 border border-primary-200 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all"
+                placeholder="Minimum 6 caractères"
               />
-              <p className="mt-1 text-xs text-gray-500">Minimum 6 caractères</p>
             </div>
 
-            {error && (
-              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md">
-                <p className="text-sm">{error}</p>
-              </div>
-            )}
+            <div>
+              <label htmlFor="confirmPassword" className="block text-sm font-medium text-primary-700 mb-1">
+                Confirmer le mot de passe
+              </label>
+              <input
+                id="confirmPassword"
+                name="confirmPassword"
+                type="password"
+                required
+                value={formData.confirmPassword}
+                onChange={handleChange}
+                className="w-full px-4 py-3 border border-primary-200 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all"
+                placeholder="Confirmez votre mot de passe"
+              />
+            </div>
 
-            <button 
-              type="submit" 
-              disabled={loading}
-              className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed transition duration-150 ease-in-out"
+            <div className="flex items-start">
+              <input
+                id="acceptTerms"
+                name="acceptTerms"
+                type="checkbox"
+                checked={formData.acceptTerms}
+                onChange={handleChange}
+                className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-primary-300 rounded mt-1"
+              />
+              <label htmlFor="acceptTerms" className="ml-2 text-sm text-primary-700">
+                J&apos;accepte les{" "}
+                <Link href="/terms" className="text-primary-600 hover:text-primary-800 underline">
+                  conditions d&apos;utilisation
+                </Link>{" "}
+                et la{" "}
+                <Link href="/privacy" className="text-primary-600 hover:text-primary-800 underline">
+                  politique de confidentialité
+                </Link>
+              </label>
+            </div>
+
+            <button
+              type="submit"
+              disabled={isLoading}
+              className="w-full btn-primary disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
             >
-              {loading ? (
+              {isLoading ? (
                 <>
                   <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                   </svg>
-                  Inscription...
+                  Création en cours...
                 </>
               ) : (
-                "Créer un compte"
+                "Créer mon compte"
               )}
             </button>
-            
-            <div className="text-center">
-              <a href="/auth/login" className="text-sm text-emerald-600 hover:text-emerald-500">
-                Déjà un compte ? Se connecter
-              </a>
+
+            <div className="mt-6">
+              <div className="relative">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-primary-200" />
+                </div>
+                <div className="relative flex justify-center text-sm">
+                  <span className="px-2 bg-white text-primary-600">ou inscrivez-vous avec</span>
+                </div>
+              </div>
+
+              <div className="mt-6 grid grid-cols-2 gap-3">
+                <button
+                  type="button"
+                  className="w-full inline-flex justify-center py-2 px-4 border border-primary-200 rounded-lg shadow-sm bg-white text-sm font-medium text-primary-700 hover:bg-primary-50 transition-colors"
+                >
+                  <span className="mr-2">📧</span>
+                  Google
+                </button>
+                <button
+                  type="button"
+                  className="w-full inline-flex justify-center py-2 px-4 border border-primary-200 rounded-lg shadow-sm bg-white text-sm font-medium text-primary-700 hover:bg-primary-50 transition-colors"
+                >
+                  <span className="mr-2">💼</span>
+                  LinkedIn
+                </button>
+              </div>
             </div>
           </form>
+        </div>
+
+        {/* Sign in link */}
+        <div className="text-center">
+          <p className="text-primary-600">
+            Vous avez déjà un compte ?{" "}
+            <Link href="/auth/login" className="font-medium text-primary-700 hover:text-primary-800 transition-colors">
+              Se connecter
+            </Link>
+          </p>
         </div>
       </div>
     </div>

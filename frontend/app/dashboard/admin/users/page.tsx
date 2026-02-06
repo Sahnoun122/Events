@@ -24,9 +24,15 @@ export default function AdminUsersPage() {
 
   // Protection admin
   useEffect(() => {
-    if (!isLoading && (!user || user.role !== "admin")) {
-      router.push("/dashboard/participant");
-      return;
+    if (!isLoading) {
+      if (!user) {
+        router.push('/auth/login');
+        return;
+      }
+      if (user.role !== 'admin') {
+        router.push('/dashboard/participant');
+        return;
+      }
     }
   }, [user, isLoading, router]);
 
@@ -97,7 +103,8 @@ export default function AdminUsersPage() {
           <div className="space-y-2">
             <h2 className="text-xl font-semibold text-primary-800">Gestion des Utilisateurs</h2>
             <p className="text-primary-600">
-              {isLoading ? "Vérification de vos permissions..." : "Accès administrateur requis"}
+              {isLoading ? "Vérification de vos permissions..." : 
+               !user ? "Connexion requise" : "Redirection vers votre espace..."}
             </p>
           </div>
         </div>

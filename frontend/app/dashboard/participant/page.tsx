@@ -12,14 +12,20 @@ export default function ParticipantDashboard() {
 
   // Protection de la page participant
   useEffect(() => {
-    if (!isLoading && !user) {
-      router.push('/auth/login');
-      return;
+    if (!isLoading) {
+      if (!user) {
+        router.push('/auth/login');
+        return;
+      }
+      if (user.role === 'admin') {
+        router.push('/dashboard/admin');
+        return;
+      }
     }
   }, [user, isLoading, router]);
 
   // Afficher le loader pendant la vérification
-  if (isLoading || !user) {
+  if (isLoading || !user || user.role === 'admin') {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-50 to-white">
         <div className="text-center space-y-4">
@@ -34,7 +40,8 @@ export default function ParticipantDashboard() {
           <div className="space-y-2">
             <h2 className="text-xl font-semibold text-primary-800">Espace Participant</h2>
             <p className="text-primary-600">
-              {isLoading ? "Chargement de votre espace..." : "Connexion requise"}
+              {isLoading ? "Chargement de votre espace..." : 
+               !user ? "Connexion requise" : "Redirection vers votre espace..."}
             </p>
           </div>
         </div>

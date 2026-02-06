@@ -12,9 +12,15 @@ export default function AdminDashboard() {
 
   // Protection de la page admin
   useEffect(() => {
-    if (!isLoading && (!user || user.role !== 'admin')) {
-      router.push('/auth/login');
-      return;
+    if (!isLoading) {
+      if (!user) {
+        router.push('/auth/login');
+        return;
+      }
+      if (user.role !== 'admin') {
+        router.push('/dashboard/participant');
+        return;
+      }
     }
   }, [user, isLoading, router]);
 
@@ -34,7 +40,8 @@ export default function AdminDashboard() {
           <div className="space-y-2">
             <h2 className="text-xl font-semibold text-primary-800">Admin Panel</h2>
             <p className="text-primary-600">
-              {isLoading ? "Vérification des permissions..." : "Accès restreint aux administrateurs"}
+              {isLoading ? "Vérification des permissions..." : 
+               !user ? "Connexion requise" : "Redirection vers votre espace..."}
             </p>
           </div>
         </div>

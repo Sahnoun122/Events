@@ -41,9 +41,15 @@ export default function AdminStatisticsPage() {
 
   // Protection admin
   useEffect(() => {
-    if (!isLoading && (!user || user.role !== "admin")) {
-      router.push("/dashboard/participant");
-      return;
+    if (!isLoading) {
+      if (!user) {
+        router.push('/auth/login');
+        return;
+      }
+      if (user.role !== 'admin') {
+        router.push('/dashboard/participant');
+        return;
+      }
     }
   }, [user, isLoading, router]);
 
@@ -99,7 +105,8 @@ export default function AdminStatisticsPage() {
           <div className="space-y-2">
             <h2 className="text-xl font-semibold text-primary-800">Statistiques</h2>
             <p className="text-primary-600">
-              {isLoading ? "Calcul des données analytiques..." : "Accès administrateur requis"}
+              {isLoading ? "Calcul des données analytiques..." : 
+               !user ? "Connexion requise" : "Redirection vers votre espace..."}
             </p>
           </div>
         </div>

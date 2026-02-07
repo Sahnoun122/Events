@@ -89,6 +89,11 @@ class ReservationsService {
     return this.request('reservations/me');
   }
 
+  // Récupérer les statistiques de l'utilisateur connecté
+  async getMyStats(): Promise<any> {
+    return this.request('reservations/me/stats');
+  }
+
   // Récupérer une réservation par ID
   async getReservationById(id: string): Promise<Reservation> {
     return this.request(`reservations/${id}`);

@@ -4,13 +4,39 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
-import { ticketsService } from "@/services/ticketsService";
+import { reservationsService } from "@/services/reservationsService";
+import { eventsService } from "@/services/eventsService";
+
+interface ParticipantStats {
+  totalReservations: number;
+  confirmed: number;
+  pending: number;
+  canceled: number;
+  refused: number;
+  upcomingEvents: Array<{
+    reservationId: string;
+    eventId: string;
+    eventTitle: string;
+    date: string;
+    location: string;
+    status: string;
+  }>;
+  recentActivity: Array<{
+    reservationId: string;
+    eventTitle: string;
+    status: string;
+    createdAt: string;
+    eventDate: string;
+  }>;
+}
 
 export default function ParticipantDashboard() {
   const { user, isLoading } = useAuth();
-  const [activeTab, setActiveTab] = useState("dashboard");
-  const [downloadingId, setDownloadingId] = useState<string | null>(null);
   const router = useRouter();
+  const [stats, setStats] = useState<ParticipantStats | null>(null);
+  const [availableEvents, setAvailableEvents] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   // Protection de la page participant
   useEffect(() => {
@@ -26,33 +52,93 @@ export default function ParticipantDashboard() {
     }
   }, [user, isLoading, router]);
 
-  const handleDownloadTicket = async (reservationId: string) => {
+  // Charger les données du dashboard
+  useEffect(() => {
+    if (user?.role === 'participant') {
+      loadDashboardData();
+    }
+  }, [user]);
+
+  const loadDashboardData = async () => {
     try {
-      setDownloadingId(reservationId);
-      await ticketsService.downloadTicket(reservationId);
+      setLoading(true);
+      setError(null);
+      
+      const [participantStats, events] = await Promise.all([
+        reservationsService.getMyStats(),
+        eventsService.getAllEvents().catch(() => [])
+      ]);
+      
+      setStats(participantStats);
+      // Filtrer les événements disponibles (publié et à venir)
+      const upcomingPublishedEvents = events.filter((event: any) => 
+        event.status === 'PUBLISHED' && new Date(event.date) > new Date()
+      ).slice(0, 4);
+      setAvailableEvents(upcomingPublishedEvents);
+      
     } catch (error: any) {
-      alert(`Erreur lors du téléchargement : ${error.message}`);
+      setError(error.message);
     } finally {
-      setDownloadingId(null);
+      setLoading(false);
+    }
+  };
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('fr-FR', {
+      day: '2-digit',
+      month: 'long',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'CONFIRMED':
+        return 'text-green-600 bg-green-50 border-green-200';
+      case 'PENDING':
+        return 'text-yellow-600 bg-yellow-50 border-yellow-200';
+      case 'CANCELED':
+        return 'text-gray-600 bg-gray-50 border-gray-200';
+      case 'REFUSED':
+        return 'text-red-600 bg-red-50 border-red-200';
+      default:
+        return 'text-gray-600 bg-gray-50 border-gray-200';
+    }
+  };
+
+  const getStatusText = (status: string) => {
+    switch (status) {
+      case 'CONFIRMED':
+        return 'Confirmée';
+      case 'PENDING':
+        return 'En attente';
+      case 'CANCELED':
+        return 'Annulée';
+      case 'REFUSED':
+        return 'Refusée';
+      default:
+        return status;
     }
   };
 
   // Afficher le loader pendant la vérification
   if (isLoading || !user || user.role === 'admin') {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-50 to-white">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-white">
         <div className="text-center space-y-4">
-          <div className="w-16 h-16 mx-auto bg-gradient-to-br from-primary-200 to-primary-300 rounded-full flex items-center justify-center">
-            <span className="text-2xl font-bold text-primary-800">🎟️</span>
+          <div className="w-16 h-16 mx-auto bg-gradient-to-br from-blue-200 to-blue-300 rounded-full flex items-center justify-center">
+            <span className="text-2xl font-bold text-blue-800">🎟️</span>
           </div>
           <div className="flex space-x-2 justify-center">
-            <div className="w-3 h-3 bg-primary-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
-            <div className="w-3 h-3 bg-primary-500 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
-            <div className="w-3 h-3 bg-primary-600 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+            <div className="w-3 h-3 bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
+            <div className="w-3 h-3 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
+            <div className="w-3 h-3 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
           </div>
           <div className="space-y-2">
-            <h2 className="text-xl font-semibold text-primary-800">Espace Participant</h2>
-            <p className="text-primary-600">
+            <h2 className="text-xl font-semibold text-blue-800">Espace Participant</h2>
+            <p className="text-blue-600">
               {isLoading ? "Chargement de votre espace..." : 
                !user ? "Connexion requise" : "Redirection vers votre espace..."}
             </p>
@@ -62,437 +148,294 @@ export default function ParticipantDashboard() {
     );
   }
 
-  const myReservations = [
-    { 
-      id: 1, 
-      eventTitle: "Conférence Tech 2026", 
-      date: "2026-03-15", 
-      time: "09:00", 
-      location: "Paris Convention Center",
-      status: "confirmed", 
-      ticketNumber: "TK-001234",
-      organizer: "TechCorp"
-    },
-    { 
-      id: 2, 
-      eventTitle: "Workshop Design UX", 
-      date: "2026-03-22", 
-      time: "14:00", 
-      location: "Studio Design Lyon",
-      status: "pending", 
-      ticketNumber: "TK-001235",
-      organizer: "DesignHub"
-    },
-    { 
-      id: 3, 
-      eventTitle: "Meetup Entrepreneurs", 
-      date: "2026-03-30", 
-      time: "18:30", 
-      location: "Business Center Nice",
-      status: "confirmed", 
-      ticketNumber: "TK-001236",
-      organizer: "StartupNetwork"
-    }
-  ];
-
-  const availableEvents = [
-    {
-      id: 4,
-      title: "Formation Marketing Digital",
-      date: "2026-04-10",
-      time: "10:00", 
-      location: "Centre Formation Marseille",
-      price: "€89",
-      organizer: "MarketPro",
-      category: "Formation",
-      spots: 15
-    },
-    {
-      id: 5,
-      title: "Networking Business",
-      date: "2026-04-15",
-      time: "19:00",
-      location: "Hôtel Carlton Cannes", 
-      price: "€45",
-      organizer: "BizNetwork",
-      category: "Networking",
-      spots: 8
-    },
-    {
-      id: 6,
-      title: "Conférence Innovation",
-      date: "2026-04-20",
-      time: "09:30",
-      location: "Palais des Congrès Toulouse",
-      price: "€125",
-      organizer: "InnovTech",
-      category: "Conférence",
-      spots: 25
-    }
-  ];
-
-  const favoriteCategories = [
-    { name: "Technologie", count: 5, icon: "💻" },
-    { name: "Business", count: 3, icon: "📊" },
-    { name: "Design", count: 2, icon: "🎨" },
-    { name: "Marketing", count: 4, icon: "📈" }
-  ];
-
-  return (
-    <div className="space-y-6">
-      {/* Header de bienvenue personnalisé */}
-      <div className="glass-effect p-6 rounded-2xl">
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <h1 className="text-2xl font-bold text-primary-800 mb-2">
-              Salut {user.fullName?.split(' ')[0]} ! 👋
-            </h1>
-            <p className="text-primary-600">
-              Découvrez vos prochains événements et gérez vos réservations
-            </p>
-          </div>
-          <div className="flex items-center space-x-4">
-            <Link 
-              href="/dashboard/participant/reservations"
-              className="bg-[#8B7355] text-white px-4 py-2 rounded-xl hover:bg-[#6B5B47] transition-colors flex items-center space-x-2 shadow-lg text-sm"
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gray-50 p-4">
+        <div className="max-w-6xl mx-auto">
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+            <h3 className="text-lg font-semibold text-red-800 mb-2">Erreur de chargement</h3>
+            <p className="text-red-600">{error}</p>
+            <button
+              onClick={loadDashboardData}
+              className="mt-4 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
             >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-              </svg>
-              <span className="font-medium">Mes Réservations</span>
-            </Link>
-            <Link 
-              href="/dashboard/participant/tickets"
-              className="bg-blue-600 text-white px-4 py-2 rounded-xl hover:bg-blue-700 transition-colors flex items-center space-x-2 shadow-lg text-sm"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z" />
-              </svg>
-              <span className="font-medium">Mes Tickets</span>
-            </Link>
-            <div className="text-4xl">🎟️</div>
+              Réessayer
+            </button>
           </div>
         </div>
+      </div>
+    );
+  }
 
-        {/* Navigation par onglets */}
-        <div className="flex space-x-1 bg-primary-100 p-1 rounded-xl mb-6">
-          {[
-            { key: "dashboard", label: "🏠 Accueil", icon: "🏠", href: "" },
-            { key: "events", label: "🎪 Événements", icon: "🎪", href: "/dashboard/participant/events" },
-            { key: "reservations", label: "🎫 Réservations", icon: "🎫", href: "/dashboard/participant/reservations" },
-            { key: "profile", label: "👤 Profil", icon: "👤", href: "" }
-          ].map((tab) => {
-            if (tab.href) {
-              return (
-                <Link
-                  key={tab.key}
-                  href={tab.href}
-                  className="flex-1 py-2 px-4 text-sm font-medium rounded-lg transition-all duration-200 text-center text-primary-600 hover:text-primary-800 hover:bg-white"
-                >
-                  {tab.icon} {tab.label.split(' ')[1]}
-                </Link>
-              );
-            }
-            return (
-              <button
-                key={tab.key}
-                onClick={() => setActiveTab(tab.key)}
-                className={`flex-1 py-2 px-4 text-sm font-medium rounded-lg transition-all duration-200 ${
-                  activeTab === tab.key
-                    ? 'bg-white text-primary-800 shadow-sm'
-                    : 'text-primary-600 hover:text-primary-800'
-                }`}
+  return (
+    <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <div className="bg-white shadow-sm border-b">
+        <div className="max-w-6xl mx-auto px-4 py-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900">
+                Bonjour, {user.fullName} 👋
+              </h1>
+              <p className="text-gray-600 mt-1">
+                Bienvenue dans votre espace participant
+              </p>
+            </div>
+            <div className="flex space-x-3">
+              <Link
+                href="/dashboard/participant/events"
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
               >
-                {tab.icon} {tab.label.split(' ')[1]}
-              </button>
-            );
-          })}
+                Événements disponibles
+              </Link>
+              <Link
+                href="/dashboard/participant/reservations"
+                className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+              >
+                Mes réservations
+              </Link>
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* Contenu selon l'onglet actif */}
-      {activeTab === "dashboard" && (
-        <div className="space-y-6">
-          {/* Statistiques personnelles */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="glass-effect p-6 rounded-2xl text-center">
-              <div className="text-3xl mb-2">🎯</div>
-              <div className="text-2xl font-bold text-primary-800">{myReservations.length}</div>
-              <p className="text-primary-600">Événements réservés</p>
-            </div>
-            <div className="glass-effect p-6 rounded-2xl text-center">
-              <div className="text-3xl mb-2">✅</div>
-              <div className="text-2xl font-bold text-green-600">
-                {myReservations.filter(r => r.status === 'confirmed').length}
-              </div>
-              <p className="text-primary-600">Confirmées</p>
-            </div>
-            <div className="glass-effect p-6 rounded-2xl text-center">
-              <div className="text-3xl mb-2">⏳</div>
-              <div className="text-2xl font-bold text-orange-600">
-                {myReservations.filter(r => r.status === 'pending').length}
-              </div>
-              <p className="text-primary-600">En attente</p>
-            </div>
+      <div className="max-w-6xl mx-auto px-4 py-8">
+        {loading ? (
+          <div className="text-center py-12">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+            <p className="text-gray-600 mt-4">Chargement de vos données...</p>
           </div>
-
-          {/* Événements recommandés */}
-          <div className="glass-effect p-6 rounded-2xl">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-bold text-primary-800">Événements recommandés pour vous</h2>
-              <Link href="/dashboard/participant/events" className="btn-secondary text-sm">
-                Voir tous
-              </Link>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {availableEvents.slice(0, 3).map((event) => (
-                <div key={event.id} className="bg-white p-4 rounded-xl border border-primary-200 hover:shadow-md transition-shadow">
-                  <div className="flex items-start justify-between mb-3">
-                    <span className="text-xs bg-primary-100 text-primary-800 px-2 py-1 rounded-full">
-                      {event.category}
-                    </span>
-                    <span className="text-sm font-semibold text-primary-800">{event.price}</span>
+        ) : (
+          <div className="space-y-8">
+            {/* Statistiques */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              <div className="bg-white rounded-lg shadow-sm border p-6">
+                <div className="flex items-center">
+                  <div className="p-3 rounded-full bg-blue-100 text-blue-600">
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                    </svg>
                   </div>
-                  <h3 className="font-semibold text-primary-800 mb-2">{event.title}</h3>
-                  <p className="text-xs text-primary-600 mb-1">📅 {event.date} à {event.time}</p>
-                  <p className="text-xs text-primary-600 mb-1">📍 {event.location}</p>
-                  <p className="text-xs text-primary-600 mb-3">👥 {event.spots} places restantes</p>
-                  <Link href={`/dashboard/participant/events/${event.id}`} className="btn-primary text-xs w-full">
-                    Voir détails
-                  </Link>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Catégories favorites */}
-          <div className="glass-effect p-6 rounded-2xl">
-            <h2 className="text-xl font-bold text-primary-800 mb-6">Vos catégories préférées</h2>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {favoriteCategories.map((category, index) => (
-                <div key={index} className="bg-white p-4 rounded-xl border border-primary-200 text-center">
-                  <div className="text-2xl mb-2">{category.icon}</div>
-                  <h3 className="font-semibold text-primary-800">{category.name}</h3>
-                  <p className="text-sm text-primary-600">{category.count} événements</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {activeTab === "events" && (
-        <div className="glass-effect p-6 rounded-2xl">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl font-bold text-primary-800">Parcourir les événements</h2>
-            <div className="flex space-x-2">
-              <button className="btn-secondary text-sm">Filtrer</button>
-              <Link href="/dashboard/participant/events" className="btn-primary text-sm">
-                Voir tous les événements
-              </Link>
-              <Link href="/dashboard/participant/reservations" className="btn-secondary text-sm">
-                📋 Mes réservations
-              </Link>
-            </div>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {availableEvents.map((event) => (
-              <div key={event.id} className="bg-white p-6 rounded-xl border border-primary-200 hover:shadow-lg transition-shadow">
-                <div className="flex items-start justify-between mb-4">
-                  <span className="text-sm bg-primary-100 text-primary-800 px-3 py-1 rounded-full">
-                    {event.category}
-                  </span>
-                  <span className="text-lg font-bold text-primary-800">{event.price}</span>
-                </div>
-                <h3 className="text-lg font-bold text-primary-800 mb-3">{event.title}</h3>
-                <div className="space-y-2 mb-4">
-                  <p className="text-sm text-primary-600 flex items-center">
-                    📅 {event.date} à {event.time}
-                  </p>
-                  <p className="text-sm text-primary-600 flex items-center">
-                    📍 {event.location}
-                  </p>
-                  <p className="text-sm text-primary-600 flex items-center">
-                    🏢 {event.organizer}
-                  </p>
-                  <p className="text-sm text-primary-600 flex items-center">
-                    👥 {event.spots} places restantes
-                  </p>
-                </div>
-                <div className="flex space-x-2">
-                  <Link href={`/dashboard/participant/events/${event.id}`} className="btn-secondary text-sm flex-1">
-                    Détails
-                  </Link>
-                  <button className="btn-primary text-sm flex-1">Réserver</button>
+                  <div className="ml-4">
+                    <p className="text-2xl font-bold text-gray-900">{stats?.totalReservations || 0}</p>
+                    <p className="text-gray-600">Total réservations</p>
+                  </div>
                 </div>
               </div>
-            ))}
-          </div>
-        </div>
-      )}
 
-      {activeTab === "reservations" && (
-        <div className="glass-effect p-6 rounded-2xl">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl font-bold text-primary-800">Mes réservations</h2>
-            <Link href="/dashboard/participant/reservations" className="btn-secondary text-sm">
-              Vue détaillée
-            </Link>
-          </div>
-          
-          <div className="space-y-4">
-            {myReservations.map((reservation) => (
-              <div key={reservation.id} className="bg-white p-6 rounded-xl border border-primary-200">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="font-bold text-primary-800">{reservation.eventTitle}</h3>
-                  <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                    reservation.status === 'confirmed' 
-                      ? 'bg-green-100 text-green-800' 
-                      : 'bg-orange-100 text-orange-800'
-                  }`}>
-                    {reservation.status === 'confirmed' ? 'Confirmé' : 'En attente'}
-                  </span>
-                </div>
-                
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                  <div>
-                    <p className="text-sm text-primary-600">📅 Date</p>
-                    <p className="font-semibold text-primary-800">{reservation.date} à {reservation.time}</p>
+              <div className="bg-white rounded-lg shadow-sm border p-6">
+                <div className="flex items-center">
+                  <div className="p-3 rounded-full bg-green-100 text-green-600">
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
                   </div>
-                  <div>
-                    <p className="text-sm text-primary-600">📍 Lieu</p>
-                    <p className="font-semibold text-primary-800">{reservation.location}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-primary-600">🎫 Numéro de ticket</p>
-                    <p className="font-semibold text-primary-800">{reservation.ticketNumber}</p>
+                  <div className="ml-4">
+                    <p className="text-2xl font-bold text-gray-900">{stats?.confirmed || 0}</p>
+                    <p className="text-gray-600">Confirmées</p>
                   </div>
                 </div>
-                
-                <div className="flex space-x-2">
-                  <Link 
-                    href={`/dashboard/participant/reservations/${reservation.id}`}
-                    className="btn-secondary text-sm"
-                  >
-                    Voir détails
-                  </Link>
-                  {reservation.status === 'confirmed' && (
-                    <button
-                      onClick={() => handleDownloadTicket(reservation.id.toString())}
-                      disabled={downloadingId === reservation.id.toString()}
-                      className="bg-blue-600 text-white hover:bg-blue-700 px-4 py-2 rounded-lg text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              </div>
+
+              <div className="bg-white rounded-lg shadow-sm border p-6">
+                <div className="flex items-center">
+                  <div className="p-3 rounded-full bg-yellow-100 text-yellow-600">
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </div>
+                  <div className="ml-4">
+                    <p className="text-2xl font-bold text-gray-900">{stats?.pending || 0}</p>
+                    <p className="text-gray-600">En attente</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-white rounded-lg shadow-sm border p-6">
+                <div className="flex items-center">
+                  <div className="p-3 rounded-full bg-purple-100 text-purple-600">
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                  </div>
+                  <div className="ml-4">
+                    <p className="text-2xl font-bold text-gray-900">{stats?.upcomingEvents?.length || 0}</p>
+                    <p className="text-gray-600">Événements à venir</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Événements à venir */}
+            {stats?.upcomingEvents && stats.upcomingEvents.length > 0 && (
+              <div className="bg-white rounded-lg shadow-sm border">
+                <div className="p-6 border-b">
+                  <div className="flex items-center justify-between">
+                    <h2 className="text-xl font-bold text-gray-900">Mes prochains événements</h2>
+                    <Link 
+                      href="/dashboard/participant/reservations"
+                      className="text-blue-600 hover:text-blue-700 font-medium"
                     >
-                      {downloadingId === reservation.id.toString() ? (
-                        <div className="flex items-center space-x-1">
-                          <div className="w-3 h-3 border border-white border-t-transparent rounded-full animate-spin"></div>
-                          <span>Téléchargement...</span>
+                      Voir tout →
+                    </Link>
+                  </div>
+                </div>
+                <div className="p-6">
+                  <div className="space-y-4">
+                    {stats.upcomingEvents.map((event) => (
+                      <div key={event.reservationId} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                        <div className="flex-1">
+                          <h3 className="font-semibold text-gray-900">{event.eventTitle}</h3>
+                          <div className="flex items-center space-x-4 mt-1 text-sm text-gray-600">
+                            <span>📅 {formatDate(event.date)}</span>
+                            <span>📍 {event.location}</span>
+                          </div>
                         </div>
-                      ) : (
-                        '📱 Télécharger ticket PDF'
-                      )}
-                    </button>
-                  )}
-                  <button className="text-red-600 hover:text-red-800 text-sm px-3 py-1">
-                    Annuler
-                  </button>
+                        <div className="flex items-center space-x-3">
+                          <span className={`px-2 py-1 text-xs font-medium rounded-full border ${getStatusColor(event.status)}`}>
+                            {getStatusText(event.status)}
+                          </span>
+                          <Link
+                            href={`/dashboard/participant/reservations/${event.reservationId}`}
+                            className="px-3 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700"
+                          >
+                            Voir
+                          </Link>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </div>
-            ))}
-          </div>
-        </div>
-      )}
+            )}
 
-      {activeTab === "profile" && (
-        <div className="glass-effect p-6 rounded-2xl">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl font-bold text-primary-800">Mon profil</h2>
-            <button className="btn-secondary text-sm">Modifier</button>
-          </div>
-          
-          <div className="max-w-2xl">
-            <div className="flex items-center space-x-6 mb-8">
-              <div className="w-24 h-24 bg-gradient-to-br from-primary-200 to-primary-300 rounded-full flex items-center justify-center">
-                <span className="text-3xl font-bold text-primary-800">
-                  {user.fullName?.charAt(0) || 'U'}
-                </span>
-              </div>
-              <div>
-                <h3 className="text-2xl font-bold text-primary-800">{user.fullName}</h3>
-                <p className="text-primary-600">{user.email}</p>
-                <p className="text-sm text-primary-500">Membre depuis mars 2026</p>
-              </div>
-            </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <label className="block text-sm font-semibold text-primary-800 mb-2">
-                  Nom complet
-                </label>
-                <input 
-                  type="text" 
-                  value={user.fullName || ''} 
-                  className="w-full px-4 py-2 border border-primary-200 rounded-lg focus:ring-2 focus:ring-primary-300 focus:border-transparent"
-                />
-              </div>
-              
-              <div>
-                <label className="block text-sm font-semibold text-primary-800 mb-2">
-                  Email
-                </label>
-                <input 
-                  type="email" 
-                  value={user.email || ''} 
-                  className="w-full px-4 py-2 border border-primary-200 rounded-lg focus:ring-2 focus:ring-primary-300 focus:border-transparent"
-                />
-              </div>
-              
-              <div>
-                <label className="block text-sm font-semibold text-primary-800 mb-2">
-                  Téléphone
-                </label>
-                <input 
-                  type="tel" 
-                  placeholder="+33 6 12 34 56 78"
-                  className="w-full px-4 py-2 border border-primary-200 rounded-lg focus:ring-2 focus:ring-primary-300 focus:border-transparent"
-                />
-              </div>
-              
-              <div>
-                <label className="block text-sm font-semibold text-primary-800 mb-2">
-                  Ville
-                </label>
-                <input 
-                  type="text" 
-                  placeholder="Paris"
-                  className="w-full px-4 py-2 border border-primary-200 rounded-lg focus:ring-2 focus:ring-primary-300 focus:border-transparent"
-                />
-              </div>
-              
-              <div className="md:col-span-2">
-                <label className="block text-sm font-semibold text-primary-800 mb-2">
-                  Préférences d'événements
-                </label>
-                <div className="flex flex-wrap gap-2">
-                  {favoriteCategories.map((cat, index) => (
-                    <span 
-                      key={index}
-                      className="bg-primary-100 text-primary-800 px-3 py-1 rounded-full text-sm"
-                    >
-                      {cat.icon} {cat.name}
-                    </span>
-                  ))}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              {/* Activité récente */}
+              {stats?.recentActivity && stats.recentActivity.length > 0 && (
+                <div className="bg-white rounded-lg shadow-sm border">
+                  <div className="p-6 border-b">
+                    <h2 className="text-xl font-bold text-gray-900">Activité récente</h2>
+                  </div>
+                  <div className="p-6">
+                    <div className="space-y-4">
+                      {stats.recentActivity.map((activity, index) => (
+                        <div key={index} className="flex items-center space-x-3">
+                          <div className="flex-shrink-0 w-2 h-2 bg-blue-400 rounded-full"></div>
+                          <div className="flex-1">
+                            <p className="text-sm font-medium text-gray-900">
+                              Réservation pour "{activity.eventTitle}"
+                            </p>
+                            <div className="flex items-center space-x-2 mt-1">
+                              <span className={`px-2 py-0.5 text-xs rounded ${getStatusColor(activity.status)}`}>
+                                {getStatusText(activity.status)}
+                              </span>
+                              <span className="text-xs text-gray-500">
+                                {new Date(activity.createdAt).toLocaleDateString('fr-FR')}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
                 </div>
+              )}
+
+              {/* Événements disponibles */}
+              {availableEvents && availableEvents.length > 0 && (
+                <div className="bg-white rounded-lg shadow-sm border">
+                  <div className="p-6 border-b">
+                    <div className="flex items-center justify-between">
+                      <h2 className="text-xl font-bold text-gray-900">Événements disponibles</h2>
+                      <Link 
+                        href="/dashboard/participant/events"
+                        className="text-blue-600 hover:text-blue-700 font-medium"
+                      >
+                        Voir tout →
+                      </Link>
+                    </div>
+                  </div>
+                  <div className="p-6">
+                    <div className="space-y-4">
+                      {availableEvents.slice(0, 3).map((event) => (
+                        <div key={event._id} className="p-4 border rounded-lg hover:bg-gray-50 transition-colors">
+                          <h3 className="font-semibold text-gray-900">{event.title}</h3>
+                          <div className="flex items-center space-x-4 mt-2 text-sm text-gray-600">
+                            <span>📅 {formatDate(event.date)}</span>
+                            <span>📍 {event.location}</span>
+                          </div>
+                          <div className="mt-3 flex items-center justify-between">
+                            <span className="text-sm text-gray-500">
+                              {event.capacity} places disponibles
+                            </span>
+                            <Link
+                              href={`/dashboard/participant/events/${event._id}`}
+                              className="px-3 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700"
+                            >
+                              Réserver
+                            </Link>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Actions rapides */}
+            <div className="bg-white rounded-lg shadow-sm border p-6">
+              <h2 className="text-xl font-bold text-gray-900 mb-4">Actions rapides</h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                <Link
+                  href="/dashboard/participant/events"
+                  className="flex items-center p-4 border rounded-lg hover:bg-blue-50 hover:border-blue-200 transition-colors"
+                >
+                  <div className="p-2 bg-blue-100 rounded text-blue-600 mr-3">
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <p className="font-medium">Explorer les événements</p>
+                    <p className="text-sm text-gray-600">Découvrir de nouveaux événements</p>
+                  </div>
+                </Link>
+
+                <Link
+                  href="/dashboard/participant/reservations"
+                  className="flex items-center p-4 border rounded-lg hover:bg-green-50 hover:border-green-200 transition-colors"
+                >
+                  <div className="p-2 bg-green-100 rounded text-green-600 mr-3">
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                    </svg>
+                  </div>
+                  <div>
+                    <p className="font-medium">Gérer mes réservations</p>
+                    <p className="text-sm text-gray-600">Voir et modifier mes réservations</p>
+                  </div>
+                </Link>
+
+                <Link
+                  href="/dashboard/participant/tickets"
+                  className="flex items-center p-4 border rounded-lg hover:bg-purple-50 hover:border-purple-200 transition-colors"
+                >
+                  <div className="p-2 bg-purple-100 rounded text-purple-600 mr-3">
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <p className="font-medium">Mes billets</p>
+                    <p className="text-sm text-gray-600">Télécharger mes billets</p>
+                  </div>
+                </Link>
               </div>
             </div>
-            
-            <div className="flex space-x-3 mt-8">
-              <button className="btn-primary">Sauvegarder les modifications</button>
-              <button className="btn-secondary">Annuler</button>
-            </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 }

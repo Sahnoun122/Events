@@ -45,6 +45,70 @@ export class ReservationsController {
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.PARTICIPANT)
+  @Get('me/stats')
+  async getMyStats(@CurrentUser() user: any) {
+    const myReservations = await this.reservationsService.getMyReservations(user.id);
+    
+    const stats = {
+      totalReservations: myReservations.length,
+      confirmed: myReservations.filter(r => r.status === ReservationStatus.CONFIRMED).length,
+      pending: myReservations.filter(r => r.status === ReservationStatus.PENDING).length,
+      canceled: myReservations.filter(r => r.status === ReservationStatus.CANCELED).length,
+      refused: myReservations.filter(r => r.status === ReservationStatus.REFUSED).length,
+      
+      // Événements à venir (confirmés uniquement)
+      upcomingEvents: myReservations
+        .filter(r => r.status === ReservationStatus.CONFIRMED)
+        .filter(r => {
+          const event = r.event as any; // Cast pour accéder aux propriétés populées
+          if (!event || !event.date) return false;
+          const eventDate = new Date(event.date);
+          return eventDate > new Date();
+        })
+        .sort((a, b) => {
+          const eventA = a.event as any;
+          const eventB = b.event as any;
+          return new Date(eventA.date).getTime() - new Date(eventB.date).getTime();
+        })
+        .slice(0, 5)
+        .map(r => {
+          const event = r.event as any;
+          return {
+            reservationId: r._id,
+            eventId: event._id,
+            eventTitle: event.title,
+            date: event.date,
+            location: event.location,
+            status: r.status
+          };
+        }),
+      
+      // Historique récent
+      recentActivity: myReservations
+        .sort((a, b) => {
+          const aCreated = (a as any).createdAt || new Date();
+          const bCreated = (b as any).createdAt || new Date();
+          return new Date(bCreated).getTime() - new Date(aCreated).getTime();
+        })
+        .slice(0, 5)
+        .map(r => {
+          const event = r.event as any;
+          const reservation = r as any;
+          return {
+            reservationId: r._id,
+            eventTitle: event ? event.title : 'Événement',
+            status: r.status,
+            createdAt: reservation.createdAt,
+            eventDate: event ? event.date : null
+          };
+        })
+    };
+    
+    return stats;
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.ADMIN)
   @Get('admin/dashboard')
   async getDashboardStats() {

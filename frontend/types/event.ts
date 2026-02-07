@@ -26,6 +26,7 @@ export interface CreateEventDto {
   location: string;
   capacity: number;
   category?: string;
+  status?: EventStatus;
 }
 
 export interface UpdateEventDto extends Partial<CreateEventDto> {}

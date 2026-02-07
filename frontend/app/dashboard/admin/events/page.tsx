@@ -196,13 +196,13 @@ export default function EventsManagementPage() {
               />
             </div>
 
-            {/* Filtres par statut */}
+            {/* Filtres par statut avec icônes */}
             <div className="flex flex-wrap gap-2">
               {[
-                { key: 'all', label: 'Tous', count: stats.total },
-                { key: EventStatus.PUBLISHED, label: 'Publiés', count: stats.published },
-                { key: EventStatus.DRAFT, label: 'Brouillons', count: stats.draft },
-                { key: EventStatus.CANCELED, label: 'Annulés', count: stats.canceled },
+                { key: 'all', label: 'Tous', count: stats.total, icon: '📊' },
+                { key: EventStatus.PUBLISHED, label: 'Publiés', count: stats.published, icon: '✅' },
+                { key: EventStatus.DRAFT, label: 'Brouillons', count: stats.draft, icon: '📝' },
+                { key: EventStatus.CANCELED, label: 'Annulés', count: stats.canceled, icon: '❌' },
               ].map((filter) => (
                 <button
                   key={filter.key}
@@ -213,6 +213,7 @@ export default function EventsManagementPage() {
                       : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-300'
                   }`}
                 >
+                  <span>{filter.icon}</span>
                   <span>{filter.label}</span>
                   <span className={`px-2 py-1 rounded-full text-xs ${
                     activeFilter === filter.key
@@ -222,7 +223,7 @@ export default function EventsManagementPage() {
                     {filter.count}
                   </span>
                 </button>
-              ))}
+              ))}}
             </div>
           </div>
         </div>

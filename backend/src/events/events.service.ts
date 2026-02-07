@@ -21,7 +21,7 @@ export class EventsService {
     const event = await this.eventModel.create({
       ...dto,
       date: new Date(dto.date),
-      status: EventStatus.DRAFT,
+      status: dto.status || EventStatus.DRAFT,
     });
 
     return event;

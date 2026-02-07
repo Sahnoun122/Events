@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { CreateEventDto } from '@/types/event';
+import { CreateEventDto, EventStatus } from '@/types/event';
 import { eventsService } from '@/services/eventsService';
 
 interface CreateEventModalProps {
@@ -17,11 +17,12 @@ export default function CreateEventModal({ isOpen, onClose, onEventCreated }: Cr
     date: '',
     location: '',
     capacity: 1,
+    status: EventStatus.DRAFT, // Statut par défaut
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
@@ -42,6 +43,7 @@ export default function CreateEventModal({ isOpen, onClose, onEventCreated }: Cr
         date: '',
         location: '',
         capacity: 1,
+        status: EventStatus.DRAFT,
       });
       onEventCreated();
       onClose();
@@ -157,6 +159,28 @@ export default function CreateEventModal({ isOpen, onClose, onEventCreated }: Cr
                 placeholder="Nombre de places"
                 disabled={loading}
               />
+            </div>
+
+            {/* Statut */}
+            <div>
+              <label htmlFor="status" className="block text-sm font-medium text-gray-700 mb-2">
+                Statut *
+              </label>
+              <select
+                id="status"
+                name="status"
+                value={formData.status || EventStatus.DRAFT}
+                onChange={handleInputChange}
+                required
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200"
+                disabled={loading}
+              >
+                <option value={EventStatus.DRAFT}>📝 Brouillon</option>
+                <option value={EventStatus.PUBLISHED}>✅ Publié</option>
+              </select>
+              <p className="text-xs text-gray-500 mt-1">
+                Brouillon: visible seulement par les admins • Publié: visible par les participants
+              </p>
             </div>
 
             {/* Lieu */}

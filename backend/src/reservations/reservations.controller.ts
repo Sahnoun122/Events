@@ -59,11 +59,13 @@ export class ReservationsController {
       
       // Calcul du taux de remplissage moyen
       byEvent: allReservations.reduce((acc, reservation) => {
-        const eventId = reservation.event._id || reservation.event;
+        const eventId = (reservation.event._id || reservation.event).toString();
         if (!acc[eventId]) {
+          // Check if event is populated (has title property) or just an ObjectId
+          const isPopulated = reservation.event && typeof reservation.event === 'object' && 'title' in reservation.event;
           acc[eventId] = {
-            eventTitle: reservation.event.title || 'Événement',
-            capacity: reservation.event.capacity || 0,
+            eventTitle: isPopulated ? (reservation.event as any).title : 'Événement',
+            capacity: isPopulated ? (reservation.event as any).capacity || 0 : 0,
             confirmed: 0,
             pending: 0,
             total: 0
@@ -78,7 +80,7 @@ export class ReservationsController {
         }
         
         return acc;
-      }, {})
+      }, {} as any)
     };
     
     return stats;

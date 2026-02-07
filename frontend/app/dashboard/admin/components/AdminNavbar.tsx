@@ -4,7 +4,6 @@ import { useState } from "react";
 import { 
   CalendarIcon, 
   ClipboardDocumentListIcon, 
-  ChartBarIcon, 
   PlusCircleIcon,
   DocumentCheckIcon,
   ArrowLeftOnRectangleIcon,
@@ -36,12 +35,6 @@ export default function AdminNavbar({ activeSection, setActiveSection, onLogout 
       label: "Gestion Réservations", 
       icon: ClipboardDocumentListIcon,
       description: "Voir toutes, confirmer, refuser"
-    },
-    { 
-      id: "statistics", 
-      label: "Statistiques", 
-      icon: ChartBarIcon,
-      description: "Indicateurs et rapports"
     },
   ];
 

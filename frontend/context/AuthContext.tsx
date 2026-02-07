@@ -79,7 +79,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         id: data.user._id,
         fullName: data.user.fullName,
         email: data.user.email,
-        role: data.user.roles[0] === 'admin' ? 'admin' : 'participant',
+        role: data.user.roles && data.user.roles.length > 0 && 
+              (data.user.roles[0].toLowerCase() === 'admin') ? 'admin' : 'participant',
       };
 
       // Sauvegarder les données d'authentification

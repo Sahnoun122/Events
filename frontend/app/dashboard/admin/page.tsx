@@ -24,12 +24,12 @@ interface DashboardStats {
     }>;
   };
   reservations: {
-    total: number;
-    pending: number;
-    confirmed: number;
-    canceled: number;
-    refused: number;
-    byEvent: Record<string, {
+    total?: number;
+    pending?: number;
+    confirmed?: number;
+    canceled?: number;
+    refused?: number;
+    byEvent?: Record<string, {
       eventTitle: string;
       capacity: number;
       confirmed: number;
@@ -79,9 +79,10 @@ export default function AdminDashboard() {
   };
 
   const calculateAverageFillRate = () => {
-    if (!stats?.reservations.byEvent) return 0;
+    if (!stats?.reservations?.byEvent) return 0;
     
-    const events = Object.values(stats.reservations.byEvent);
+    const byEventData = stats.reservations.byEvent;
+    const events = Object.values(byEventData);
     if (events.length === 0) return 0;
     
     const totalFillRate = events.reduce((sum, event) => {
@@ -262,7 +263,9 @@ export default function AdminDashboard() {
                 <div className="text-right">
                   <span className="text-lg font-bold text-green-600">{stats?.reservations.confirmed || 0}</span>
                   <div className="text-sm text-gray-500">
-                    {stats?.reservations.total ? Math.round((stats.reservations.confirmed / stats.reservations.total) * 100) : 0}%
+                    {stats?.reservations?.total && stats?.reservations?.confirmed 
+                      ? Math.round((stats.reservations.confirmed / stats.reservations.total) * 100) 
+                      : 0}%
                   </div>
                 </div>
               </div>
@@ -275,7 +278,9 @@ export default function AdminDashboard() {
                 <div className="text-right">
                   <span className="text-lg font-bold text-yellow-600">{stats?.reservations.pending || 0}</span>
                   <div className="text-sm text-gray-500">
-                    {stats?.reservations.total ? Math.round((stats.reservations.pending / stats.reservations.total) * 100) : 0}%
+                    {stats?.reservations?.total && stats?.reservations?.pending 
+                      ? Math.round((stats.reservations.pending / stats.reservations.total) * 100) 
+                      : 0}%
                   </div>
                 </div>
               </div>
@@ -288,7 +293,9 @@ export default function AdminDashboard() {
                 <div className="text-right">
                   <span className="text-lg font-bold text-red-600">{stats?.reservations.refused || 0}</span>
                   <div className="text-sm text-gray-500">
-                    {stats?.reservations.total ? Math.round((stats.reservations.refused / stats.reservations.total) * 100) : 0}%
+                    {stats?.reservations?.total && stats?.reservations?.refused 
+                      ? Math.round((stats.reservations.refused / stats.reservations.total) * 100) 
+                      : 0}%
                   </div>
                 </div>
               </div>
@@ -301,7 +308,9 @@ export default function AdminDashboard() {
                 <div className="text-right">
                   <span className="text-lg font-bold text-gray-600">{stats?.reservations.canceled || 0}</span>
                   <div className="text-sm text-gray-500">
-                    {stats?.reservations.total ? Math.round((stats.reservations.canceled / stats.reservations.total) * 100) : 0}%
+                    {stats?.reservations?.total && stats?.reservations?.canceled 
+                      ? Math.round((stats.reservations.canceled / stats.reservations.total) * 100) 
+                      : 0}%
                   </div>
                 </div>
               </div>
@@ -327,10 +336,10 @@ export default function AdminDashboard() {
                   </div>
                   <div className="text-right">
                     <div className="text-sm font-medium text-gray-600">
-                      {stats.reservations.byEvent[event._id]?.confirmed || 0}/{event.capacity}
+                      {stats?.reservations?.byEvent?.[event._id]?.confirmed || 0}/{event.capacity}
                     </div>
                     <div className="text-xs text-gray-500">
-                      {event.capacity > 0 ? Math.round(((stats.reservations.byEvent[event._id]?.confirmed || 0) / event.capacity) * 100) : 0}%
+                      {event.capacity > 0 ? Math.round(((stats?.reservations?.byEvent?.[event._id]?.confirmed || 0) / event.capacity) * 100) : 0}%
                     </div>
                   </div>
                 </div>
@@ -381,14 +390,14 @@ export default function AdminDashboard() {
             </Link>
           </div>
           
-          {stats?.reservations.pending > 0 && (
+          {(stats?.reservations.pending ?? 0) > 0 && (
             <div className="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
               <div className="flex items-center space-x-2">
                 <svg className="w-5 h-5 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
                 <span className="text-yellow-800 font-medium">
-                  {stats.reservations.pending} réservation{stats.reservations.pending > 1 ? 's' : ''} en attente
+                  {stats?.reservations.pending || 0} réservation{(stats?.reservations.pending || 0) > 1 ? 's' : ''} en attente
                 </span>
               </div>
               <p className="text-yellow-700 text-sm mt-1">

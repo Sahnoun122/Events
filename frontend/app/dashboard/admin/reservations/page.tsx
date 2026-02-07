@@ -8,7 +8,7 @@ import { eventsService } from '@/services/eventsService';
 import { Event } from '@/types/event';
 
 export default function ReservationsManagementPage() {
-  const { user } = useAuth();
+  const { user, isLoading: authLoading } = useAuth();
   const [reservations, setReservations] = useState<Reservation[]>([]);
   const [events, setEvents] = useState<Event[]>([]);
   const [filteredReservations, setFilteredReservations] = useState<Reservation[]>([]);
@@ -72,8 +72,8 @@ export default function ReservationsManagementPage() {
       const searchLower = searchTerm.toLowerCase();
       filtered = filtered.filter(reservation =>
         reservation.event.title.toLowerCase().includes(searchLower) ||
-        (reservation.user?.fullName || reservation.participant?.fullName || '').toLowerCase().includes(searchLower) ||
-        (reservation.user?.email || reservation.participant?.email || '').toLowerCase().includes(searchLower) ||
+        (reservation.participant?.fullName || '').toLowerCase().includes(searchLower) ||
+        (reservation.participant?.email || '').toLowerCase().includes(searchLower) ||
         reservation.event.location.toLowerCase().includes(searchLower)
       );
     }
@@ -84,16 +84,16 @@ export default function ReservationsManagementPage() {
       
       switch (sortBy) {
         case 'date':
-          aValue = new Date(a.createdAt || a.reservationDate);
-          bValue = new Date(b.createdAt || b.reservationDate);
+          aValue = new Date(a.createdAt);
+          bValue = new Date(b.createdAt);
           break;
         case 'event':
           aValue = a.event.title;
           bValue = b.event.title;
           break;
         case 'user':
-          aValue = a.user?.fullName || a.participant?.fullName || '';
-          bValue = b.user?.fullName || b.participant?.fullName || '';
+          aValue = a.participant?.fullName || '';
+          bValue = b.participant?.fullName || '';
           break;
         default:
           return 0;
@@ -416,8 +416,8 @@ export default function ReservationsManagementPage() {
                 </thead>
                 <tbody className="divide-y divide-gray-200">
                   {filteredReservations.map((reservation) => {
-                    const participantName = reservation.user?.fullName || reservation.participant?.fullName || 'Utilisateur inconnu';
-                    const participantEmail = reservation.user?.email || reservation.participant?.email || 'Email non disponible';
+                    const participantName = reservation.participant?.fullName || 'Utilisateur inconnu';
+                    const participantEmail = reservation.participant?.email || 'Email non disponible';
                     
                     return (
                       <tr key={reservation._id} className="hover:bg-gray-50/50">
@@ -468,7 +468,7 @@ export default function ReservationsManagementPage() {
                           </span>
                         </td>
                         <td className="py-4 px-6 text-sm text-gray-900">
-                          {new Date(reservation.createdAt || reservation.reservationDate).toLocaleDateString('fr-FR')}
+                          {new Date(reservation.createdAt).toLocaleDateString('fr-FR')}
                           {reservation.comment && (
                             <div className="text-xs text-gray-500 italic mt-1">
                               "{reservation.comment}"

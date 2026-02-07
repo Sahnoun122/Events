@@ -379,11 +379,11 @@ export default function ParticipantDashboard() {
                   </Link>
                   {reservation.status === 'confirmed' && (
                     <button
-                      onClick={() => handleDownloadTicket(reservation.id)}
-                      disabled={downloadingId === reservation.id}
+                      onClick={() => handleDownloadTicket(reservation.id.toString())}
+                      disabled={downloadingId === reservation.id.toString()}
                       className="bg-blue-600 text-white hover:bg-blue-700 px-4 py-2 rounded-lg text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      {downloadingId === reservation.id ? (
+                      {downloadingId === reservation.id.toString() ? (
                         <div className="flex items-center space-x-1">
                           <div className="w-3 h-3 border border-white border-t-transparent rounded-full animate-spin"></div>
                           <span>Téléchargement...</span>

@@ -97,7 +97,6 @@ export default function EventsManagementPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary-50 via-white to-secondary-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* En-tête */}
         <div className="mb-8">
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-6">
             <div>
@@ -119,7 +118,6 @@ export default function EventsManagementPage() {
             </button>
           </div>
 
-          {/* Statistiques */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
             <div className="bg-white/70 backdrop-blur-sm border border-primary-100 p-4 rounded-xl shadow-sm">
               <div className="flex items-center justify-between">
@@ -179,10 +177,8 @@ export default function EventsManagementPage() {
           </div>
         </div>
 
-        {/* Filtres et Recherche */}
         <div className="bg-white/70 backdrop-blur-sm border border-primary-100 p-6 rounded-xl shadow-sm mb-6">
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-            {/* Barre de recherche */}
             <div className="relative flex-1 max-w-md">
               <svg className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -196,7 +192,6 @@ export default function EventsManagementPage() {
               />
             </div>
 
-            {/* Filtres par statut avec icônes */}
             <div className="flex flex-wrap gap-2">
               {[
                 { key: 'all', label: 'Tous', count: stats.total, icon: '📊' },
@@ -223,12 +218,11 @@ export default function EventsManagementPage() {
                     {filter.count}
                   </span>
                 </button>
-              ))}}
+              ))}
             </div>
           </div>
         </div>
 
-        {/* Message d'erreur */}
         {error && (
           <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-6 flex items-center space-x-2">
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

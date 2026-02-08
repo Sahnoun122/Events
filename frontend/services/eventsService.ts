@@ -4,7 +4,6 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
 
 class EventsService {
   private async request(endpoint: string, options: RequestInit = {}) {
-    // Nettoyer l'URL pour éviter les doubles slashes
     const baseUrl = API_URL.endsWith('/') ? API_URL.slice(0, -1) : API_URL;
     const cleanEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
     const url = `${baseUrl}${cleanEndpoint}`;
@@ -17,7 +16,6 @@ class EventsService {
       ...options,
     };
 
-    // Ajouter le token d'authentification s'il existe
     const token = localStorage.getItem('token');
     if (token) {
       config.headers = {
@@ -52,32 +50,26 @@ class EventsService {
     }
   }
 
-  // Récupérer tous les événements (admin)
   async getAllEvents(): Promise<Event[]> {
     return this.request('events');
   }
 
-  // Récupérer les événements (alias pour getPublicEvents)
   async getEvents(): Promise<Event[]> {
     return this.getPublicEvents();
   }
 
-  // Récupérer les événements publics
   async getPublicEvents(): Promise<Event[]> {
     return this.request('events/public');
   }
 
-  // Récupérer un événement par ID
   async getEvent(id: string): Promise<Event> {
     return this.getEventById(id);
   }
 
-  // Récupérer un événement par ID
   async getEventById(id: string): Promise<Event> {
     return this.request(`events/${id}`);
   }
 
-  // Créer un nouveau événement
   async createEvent(eventData: CreateEventDto): Promise<Event> {
     return this.request('events', {
       method: 'POST',
@@ -85,7 +77,6 @@ class EventsService {
     });
   }
 
-  // Modifier un événement
   async updateEvent(id: string, eventData: UpdateEventDto): Promise<Event> {
     return this.request(`events/${id}`, {
       method: 'PATCH',
@@ -93,28 +84,24 @@ class EventsService {
     });
   }
 
-  // Publier un événement
   async publishEvent(id: string): Promise<Event> {
     return this.request(`events/${id}/publish`, {
       method: 'PATCH',
     });
   }
 
-  // Annuler un événement
   async cancelEvent(id: string): Promise<Event> {
     return this.request(`events/${id}/cancel`, {
       method: 'PATCH',
     });
   }
 
-  // Supprimer un événement
   async deleteEvent(id: string): Promise<void> {
     await this.request(`events/${id}`, {
       method: 'DELETE',
     });
   }
 
-  // Récupérer les statistiques des événements
   async getEventStats(): Promise<any> {
     return this.request('events/admin/stats');
   }

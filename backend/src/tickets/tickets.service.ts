@@ -33,7 +33,6 @@ export class TicketsService {
       status: reservation.status
     });
 
-    // Normaliser les IDs pour la comparaison
     const participantId = reservation.participant._id ? 
       reservation.participant._id.toString() : 
       reservation.participant.toString();
@@ -52,11 +51,7 @@ export class TicketsService {
     }
 
     if (reservation.status !== ReservationStatus.CONFIRMED) {
-      // Pour les tests, accepter aussi les réservations PENDING
       console.log('⚠️  AVERTISSEMENT: Génération de ticket pour réservation non confirmée (mode test)');
-      // throw new BadRequestException(
-      //   'Ticket can only be downloaded for CONFIRMED reservations',
-      // );
     }
 
     const doc = new PDFDocument({ size: 'A4', margin: 50 });

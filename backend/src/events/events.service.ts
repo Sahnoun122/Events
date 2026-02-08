@@ -105,7 +105,6 @@ export class EventsService {
       status: EventStatus.CANCELED 
     });
 
-    // Récupérer les événements à venir avec leur capacité
     const upcomingEventsData = await this.eventModel
       .find({ 
         status: EventStatus.PUBLISHED,

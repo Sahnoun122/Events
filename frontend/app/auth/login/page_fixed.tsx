@@ -19,7 +19,6 @@ export default function LoginPage() {
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
-  // Vérifier s'il y a un message de succès depuis l'inscription
   useEffect(() => {
     const message = searchParams.get('message');
     if (message) {
@@ -27,7 +26,6 @@ export default function LoginPage() {
     }
   }, [searchParams]);
 
-  // Rediriger si déjà connecté
   useEffect(() => {
     if (user && !authLoading) {
       if (user.role === "admin") {
@@ -59,7 +57,6 @@ export default function LoginPage() {
     try {
       setIsLoading(true);
       await login(formData.email, formData.password);
-      // La redirection se fait automatiquement dans l'AuthContext
     } catch (err) {
       setError("Email ou mot de passe incorrect");
     } finally {
@@ -83,7 +80,6 @@ export default function LoginPage() {
     }
   };
 
-  // Afficher le loader si on est en train de charger l'auth
   if (authLoading) {
     return (
       <div className="min-h-screen bg-gradient-beige flex items-center justify-center">
@@ -100,7 +96,6 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen bg-gradient-beige flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
-        {/* Header */}
         <div className="text-center">
           <Link href="/" className="inline-flex items-center space-x-2 mb-8 group">
             <div className="w-10 h-10 bg-primary-600 rounded-full flex items-center justify-center group-hover:bg-primary-700 transition-colors">
@@ -117,7 +112,6 @@ export default function LoginPage() {
           </p>
         </div>
 
-        {/* Messages de succès et d'erreur */}
         {successMessage && (
           <div className="bg-green-50 border border-green-200 rounded-lg p-4">
             <div className="flex items-center">
@@ -136,7 +130,6 @@ export default function LoginPage() {
           </div>
         )}
 
-        {/* Connexions de test */}
         <div className="glass-effect p-4 rounded-xl border border-primary-200">
           <p className="text-sm text-primary-700 mb-3 font-medium">🚀 Comptes de démonstration :</p>
           <div className="flex space-x-2">
@@ -157,10 +150,8 @@ export default function LoginPage() {
           </div>
         </div>
 
-        {/* Formulaire */}
         <div className="glass-effect p-8 rounded-2xl shadow-lg border border-white/20">
           <form className="space-y-6" onSubmit={handleSubmit}>
-            {/* Email */}
             <div>
               <label htmlFor="email" className="block text-sm font-semibold text-primary-800 mb-2">
                 Adresse email
@@ -178,7 +169,6 @@ export default function LoginPage() {
               />
             </div>
 
-            {/* Mot de passe */}
             <div>
               <label htmlFor="password" className="block text-sm font-semibold text-primary-800 mb-2">
                 Mot de passe
@@ -196,7 +186,6 @@ export default function LoginPage() {
               />
             </div>
 
-            {/* Options */}
             <div className="flex items-center justify-between">
               <label className="flex items-center">
                 <input
@@ -216,7 +205,6 @@ export default function LoginPage() {
               </Link>
             </div>
 
-            {/* Bouton de connexion */}
             <button
               type="submit"
               disabled={isLoading}
@@ -235,7 +223,6 @@ export default function LoginPage() {
               )}
             </button>
 
-            {/* Lien d'inscription */}
             <div className="text-center">
               <span className="text-primary-600">Pas encore de compte ? </span>
               <Link 
@@ -248,7 +235,6 @@ export default function LoginPage() {
           </form>
         </div>
 
-        {/* Footer */}
         <div className="text-center">
           <p className="text-sm text-primary-500">
             En vous connectant, vous acceptez nos{" "}

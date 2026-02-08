@@ -67,22 +67,6 @@ export default function LoginPage() {
     }
   };
 
-  const fillDemoCredentials = (role: 'admin' | 'participant') => {
-    if (role === 'admin') {
-      setFormData({
-        email: 'admin@admin.com',
-        password: 'admin123',
-        rememberMe: false
-      });
-    } else {
-      setFormData({
-        email: 'user@user.com',
-        password: 'user123',
-        rememberMe: false
-      });
-    }
-  };
-
   // Afficher le loader si on est en train de charger l'auth
   if (authLoading) {
     return (
@@ -136,28 +120,6 @@ export default function LoginPage() {
           </div>
         )}
 
-        {/* Connexions de test */}
-        <div className="glass-effect p-4 rounded-xl border border-primary-200">
-          <p className="text-sm text-primary-700 mb-3 font-medium">🚀 Comptes de démonstration :</p>
-          <div className="flex space-x-2">
-            <button 
-              type="button"
-              onClick={() => fillDemoCredentials('admin')}
-              className="flex-1 px-3 py-2 bg-red-100 text-red-800 rounded-lg text-sm font-medium hover:bg-red-200 transition-colors"
-            >
-              👑 Admin
-            </button>
-            <button 
-              type="button"
-              onClick={() => fillDemoCredentials('participant')}
-              className="flex-1 px-3 py-2 bg-blue-100 text-blue-800 rounded-lg text-sm font-medium hover:bg-blue-200 transition-colors"
-            >
-              👤 Participant
-            </button>
-          </div>
-        </div>
-
-        {/* Formulaire */}
         <div className="glass-effect p-8 rounded-2xl shadow-lg border border-white/20">
           <form className="space-y-6" onSubmit={handleSubmit}>
             {/* Email */}

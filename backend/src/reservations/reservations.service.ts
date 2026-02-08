@@ -76,7 +76,7 @@ export class ReservationsService {
 
 
   async getMyReservations(participantId: string) {
-    console.log('🔍 Recherche de réservations pour l\'utilisateur:', participantId);
+    console.log('Recherche de réservations pour l\'utilisateur:', participantId);
     
     const reservations = await this.reservationModel
       .find({ participant: new Types.ObjectId(participantId) })

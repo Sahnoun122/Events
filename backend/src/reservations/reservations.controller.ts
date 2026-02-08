@@ -57,11 +57,10 @@ export class ReservationsController {
       canceled: myReservations.filter(r => r.status === ReservationStatus.CANCELED).length,
       refused: myReservations.filter(r => r.status === ReservationStatus.REFUSED).length,
       
-      // Événements à venir (confirmés uniquement)
       upcomingEvents: myReservations
         .filter(r => r.status === ReservationStatus.CONFIRMED)
         .filter(r => {
-          const event = r.event as any; // Cast pour accéder aux propriétés populées
+          const event = r.event as any;
           if (!event || !event.date) return false;
           const eventDate = new Date(event.date);
           return eventDate > new Date();
@@ -84,7 +83,6 @@ export class ReservationsController {
           };
         }),
       
-      // Historique récent
       recentActivity: myReservations
         .sort((a, b) => {
           const aCreated = (a as any).createdAt || new Date();
@@ -121,11 +119,9 @@ export class ReservationsController {
       canceled: allReservations.filter(r => r.status === ReservationStatus.CANCELED).length,
       refused: allReservations.filter(r => r.status === ReservationStatus.REFUSED).length,
       
-      // Calcul du taux de remplissage moyen
       byEvent: allReservations.reduce((acc, reservation) => {
         const eventId = (reservation.event._id || reservation.event).toString();
         if (!acc[eventId]) {
-          // Check if event is populated (has title property) or just an ObjectId
           const isPopulated = reservation.event && typeof reservation.event === 'object' && 'title' in reservation.event;
           acc[eventId] = {
             eventTitle: isPopulated ? (reservation.event as any).title : 'Événement',

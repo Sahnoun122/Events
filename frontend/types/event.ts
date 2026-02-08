@@ -1,4 +1,4 @@
-// Types pour les événements
+
 export enum EventStatus {
   DRAFT = 'DRAFT',
   PUBLISHED = 'PUBLISHED',
@@ -12,7 +12,7 @@ export interface Event {
   date: string;
   location: string;
   capacity: number;
-  maxParticipants?: number; // Alias pour capacity
+  maxParticipants?: number; 
   category?: string;
   status: EventStatus;
   createdAt?: string;

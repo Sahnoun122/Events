@@ -4,13 +4,11 @@ const fs = require('fs');
 console.log('🧪 Test de génération PDF...');
 
 try {
-  // Test simple de génération PDF
   const doc = new PDFDocument({ size: 'A4', margin: 50 });
   const stream = fs.createWriteStream('test-ticket.pdf');
   
   doc.pipe(stream);
   
-  // Contenu du ticket de test
   doc.fontSize(20).text('🎫 Ticket de Réservation - TEST', { align: 'center' });
   doc.moveDown();
   

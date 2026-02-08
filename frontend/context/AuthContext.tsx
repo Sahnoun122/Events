@@ -35,7 +35,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const authData = localStorage.getItem("auth");
         if (authData) {
           const parsed = JSON.parse(authData);
-          // Vérifier si le token n'a pas expiré
           if (parsed.expiresAt && new Date(parsed.expiresAt) > new Date()) {
             setUser(parsed.user);
           } else {
@@ -74,7 +73,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       const data = await response.json();
       
-      // Adapter le format de réponse du backend
       const userData: User = {
         id: data.user._id,
         fullName: data.user.fullName,
@@ -83,18 +81,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               (data.user.roles[0].toLowerCase() === 'admin') ? 'admin' : 'participant',
       };
 
-      // Sauvegarder les données d'authentification
       const authData = {
         user: userData,
         token: data.access_token,
-        expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString() // 24h
+        expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
       };
 
       localStorage.setItem('auth', JSON.stringify(authData));
       localStorage.setItem('token', data.access_token);
       setUser(userData);
       
-      // Redirection automatique selon le rôle
       redirectByRole(userData.role);
       
     } catch (error) {
@@ -122,7 +118,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         throw new Error(errorData.message || 'Erreur lors de l\'inscription');
       }
 
-      // Redirection vers la page de connexion après inscription
       router.push("/auth/login?message=Inscription réussie ! Veuillez vous connecter.");
       
     } catch (error) {
@@ -144,7 +139,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (role === "admin") {
       router.push("/dashboard/admin");
     } else {
-      router.push("/dashboard/participant"); // Par défaut pour participant
+      router.push("/dashboard/participant"); 
     }
   };
 

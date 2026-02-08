@@ -7,7 +7,6 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-gradient-beige">
-      {/* Header Navigation */}
       <header className="glass-effect sticky top-0 z-50">
         <nav className="section-container py-4">
           <div className="flex items-center justify-between">
@@ -18,7 +17,6 @@ export default function Home() {
               <span className="text-xl font-bold text-primary-800">EventsPro</span>
             </div>
             
-            {/* Desktop Navigation */}
             <div className="hidden md:flex items-center space-x-8">
               <Link href="#accueil" className="text-primary-700 hover:text-primary-800 font-medium transition-colors">
                 Accueil
@@ -42,7 +40,6 @@ export default function Home() {
               </div>
             </div>
 
-            {/* Mobile Menu Button */}
             <button
               className="md:hidden p-2 text-primary-700"
               onClick={() => setIsMenuOpen(!isMenuOpen)}
@@ -53,7 +50,6 @@ export default function Home() {
             </button>
           </div>
 
-          {/* Mobile Navigation */}
           {isMenuOpen && (
             <div className="md:hidden mt-4 pb-4 border-t border-primary-200">
               <div className="flex flex-col space-y-3 pt-4">
@@ -83,7 +79,6 @@ export default function Home() {
         </nav>
       </header>
 
-      {/* Hero Section */}
       <section id="accueil" className="section-container py-20">
         <div className="text-center max-w-4xl mx-auto">
           <h1 className="text-5xl md:text-6xl font-bold text-primary-900 mb-6 leading-tight">
@@ -104,7 +99,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Services Section */}
       <section id="services" className="section-container py-20">
         <div className="text-center mb-16">
           <h2 className="text-3xl md:text-4xl font-bold text-primary-900 mb-4">
@@ -142,7 +136,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Events Section */}
       <section id="events" className="section-container py-20">
         <div className="text-center mb-16">
           <h2 className="text-3xl md:text-4xl font-bold text-primary-900 mb-4">
@@ -199,7 +192,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Contact Section */}
       <section id="contact" className="section-container py-20">
         <div className="max-w-2xl mx-auto text-center">
           <h2 className="text-3xl md:text-4xl font-bold text-primary-900 mb-4">
@@ -241,7 +233,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Footer */}
+
       <footer className="bg-primary-800 text-white py-12">
         <div className="section-container">
           <div className="grid md:grid-cols-4 gap-8">

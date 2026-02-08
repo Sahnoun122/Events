@@ -41,7 +41,6 @@ export default function AdminNavbar({ activeSection, setActiveSection, onLogout 
   return (
     <nav className="bg-white shadow-lg border-r border-gray-200 w-72 min-h-screen">
       <div className="p-6">
-        {/* Header */}
         <div className="mb-8">
           <h2 className="text-2xl font-bold text-gray-800 mb-2">
             Dashboard Admin
@@ -51,7 +50,6 @@ export default function AdminNavbar({ activeSection, setActiveSection, onLogout 
           </p>
         </div>
         
-        {/* Navigation Items */}
         <ul className="space-y-3">
           {navItems.map((item) => {
             const Icon = item.icon;

@@ -17,7 +17,7 @@ export default function CreateEventModal({ isOpen, onClose, onEventCreated }: Cr
     date: '',
     location: '',
     capacity: 1,
-    status: EventStatus.DRAFT, // Statut par défaut
+    status: EventStatus.DRAFT,
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);

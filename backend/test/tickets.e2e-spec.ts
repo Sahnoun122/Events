@@ -14,15 +14,17 @@ describe('TicketsController (e2e)', () => {
 
     app = moduleFixture.createNestApplication();
     await app.init();
+  }, 10000);
+
+  afterEach(async () => {
+    if (app) {
+      await app.close();
+    }
   });
 
   it('/tickets/:reservationId (GET) should require authentication', () => {
     return request(app.getHttpServer())
       .get('/tickets/507f1f77bcf86cd799439011')
       .expect(401);
-  });
-
-  afterAll(async () => {
-    await app.close();
   });
 });

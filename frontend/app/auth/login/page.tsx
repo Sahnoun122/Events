@@ -19,7 +19,6 @@ export default function LoginPage() {
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
-  // Vérifier s'il y a un message de succès depuis l'inscription
   useEffect(() => {
     const message = searchParams.get('message');
     if (message) {
@@ -27,7 +26,6 @@ export default function LoginPage() {
     }
   }, [searchParams]);
 
-  // Rediriger si déjà connecté
   useEffect(() => {
     if (user && !authLoading) {
       if (user.role === "admin") {
@@ -67,7 +65,6 @@ export default function LoginPage() {
     }
   };
 
-  // Afficher le loader si on est en train de charger l'auth
   if (authLoading) {
     return (
       <div className="min-h-screen bg-gradient-beige flex items-center justify-center">
@@ -101,7 +98,6 @@ export default function LoginPage() {
           </p>
         </div>
 
-        {/* Messages de succès et d'erreur */}
         {successMessage && (
           <div className="bg-green-50 border border-green-200 rounded-lg p-4">
             <div className="flex items-center">
@@ -122,7 +118,6 @@ export default function LoginPage() {
 
         <div className="glass-effect p-8 rounded-2xl shadow-lg border border-white/20">
           <form className="space-y-6" onSubmit={handleSubmit}>
-            {/* Email */}
             <div>
               <label htmlFor="email" className="block text-sm font-semibold text-primary-800 mb-2">
                 Adresse email
@@ -140,7 +135,6 @@ export default function LoginPage() {
               />
             </div>
 
-            {/* Mot de passe */}
             <div>
               <label htmlFor="password" className="block text-sm font-semibold text-primary-800 mb-2">
                 Mot de passe
@@ -158,7 +152,6 @@ export default function LoginPage() {
               />
             </div>
 
-            {/* Options */}
             <div className="flex items-center justify-between">
               <label className="flex items-center">
                 <input
@@ -178,7 +171,6 @@ export default function LoginPage() {
               </Link>
             </div>
 
-            {/* Bouton de connexion */}
             <button
               type="submit"
               disabled={isLoading}

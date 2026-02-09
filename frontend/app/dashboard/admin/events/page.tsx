@@ -17,7 +17,6 @@ export default function EventsManagementPage() {
   const [activeFilter, setActiveFilter] = useState<'all' | EventStatus>('all');
   const [searchTerm, setSearchTerm] = useState('');
   
-  // Modals
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editingEvent, setEditingEvent] = useState<Event | null>(null);
@@ -39,16 +38,13 @@ export default function EventsManagementPage() {
     loadEvents();
   }, []);
 
-  // Filtrer les événements
   useEffect(() => {
     let filtered = events;
 
-    // Filtre par statut
     if (activeFilter !== 'all') {
       filtered = filtered.filter(event => event.status === activeFilter);
     }
 
-    // Filtre par recherche
     if (searchTerm) {
       filtered = filtered.filter(event =>
         event.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -238,7 +234,6 @@ export default function EventsManagementPage() {
           </div>
         )}
 
-        {/* Liste des événements */}
         {filteredEvents.length === 0 && !loading ? (
           <div className="bg-white/70 backdrop-blur-sm border border-primary-100 rounded-xl shadow-sm p-12 text-center">
             <svg className="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

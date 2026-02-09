@@ -1,4 +1,3 @@
-// Page de téléchargement de ticket PDF
 "use client";
 
 export default function TicketDownloadPage({ params }: { params: { id: string } }) {

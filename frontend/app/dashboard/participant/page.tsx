@@ -38,7 +38,6 @@ export default function ParticipantDashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Protection de la page participant
   useEffect(() => {
     if (!isLoading) {
       if (!user) {
@@ -52,7 +51,6 @@ export default function ParticipantDashboard() {
     }
   }, [user, isLoading, router]);
 
-  // Charger les données du dashboard
   useEffect(() => {
     if (user?.role === 'participant') {
       loadDashboardData();
@@ -70,7 +68,6 @@ export default function ParticipantDashboard() {
       ]);
       
       setStats(participantStats);
-      // Filtrer les événements disponibles (publié et à venir)
       const upcomingPublishedEvents = events.filter((event: any) => 
         event.status === 'PUBLISHED' && new Date(event.date) > new Date()
       ).slice(0, 4);
@@ -123,7 +120,6 @@ export default function ParticipantDashboard() {
     }
   };
 
-  // Afficher le loader pendant la vérification
   if (isLoading || !user || user.role === 'admin') {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-white">

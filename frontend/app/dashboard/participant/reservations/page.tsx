@@ -127,7 +127,6 @@ export default function ParticipantReservations() {
           </p>
         </div>
 
-        {/* Messages */}
         {error && (
           <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-6">
             {error}
@@ -230,7 +229,6 @@ export default function ParticipantReservations() {
                       </td>
                       <td className="py-4 px-6 text-center">
                         <div className="flex items-center justify-center space-x-2">
-                          {/* Bouton de téléchargement PDF - uniquement pour les réservations confirmées */}
                           {reservation.status === ReservationStatus.CONFIRMED && (
                             <button
                               onClick={() => handleDownloadTicket(reservation._id)}

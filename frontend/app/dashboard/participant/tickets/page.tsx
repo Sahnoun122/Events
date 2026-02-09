@@ -41,9 +41,6 @@ export default function ParticipantTickets() {
     try {
       setDownloadingId(reservationId);
       await ticketsService.downloadTicket(reservationId);
-      
-      // Optionnel : afficher une notification de succès
-      // toast.success(`Ticket pour "${eventTitle}" téléchargé avec succès !`);
     } catch (error: any) {
       setError(`Erreur lors du téléchargement : ${error.message}`);
     } finally {
@@ -85,7 +82,6 @@ export default function ParticipantTickets() {
           </p>
         </div>
 
-        {/* Messages */}
         {error && (
           <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-6">
             {error}

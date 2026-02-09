@@ -198,7 +198,6 @@ export default function RegisterPage() {
           </form>
         </div>
 
-        {/* Sign in link */}
         <div className="text-center">
           <p className="text-primary-600">
             Vous avez déjà un compte ?{" "}

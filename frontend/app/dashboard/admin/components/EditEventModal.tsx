@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Event, UpdateEventDto } from '@/types/event';
+import { Event, UpdateEventDto, EventStatus } from '@/types/event';
 import { eventsService } from '@/services/eventsService';
 
 interface EditEventModalProps {
@@ -18,6 +18,7 @@ export default function EditEventModal({ isOpen, event, onClose, onEventUpdated 
     date: '',
     location: '',
     capacity: 1,
+    status: EventStatus.DRAFT,
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -35,11 +36,12 @@ export default function EditEventModal({ isOpen, event, onClose, onEventUpdated 
         date: localDateTime,
         location: event.location,
         capacity: event.capacity,
+        status: event.status,
       });
     }
   }, [event]);
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
@@ -189,23 +191,34 @@ export default function EditEventModal({ isOpen, event, onClose, onEventUpdated 
                 disabled={loading}
               />
             </div>
-          </div>
 
-          {/* Statut actuel */}
-          <div className="bg-gray-50 p-4 rounded-lg">
-            <div className="flex items-center space-x-3">
-              <span className="text-sm font-medium text-gray-700">Statut actuel:</span>
-              <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
-                event.status === 'PUBLISHED' 
-                  ? 'bg-green-100 text-green-800' 
-                  : event.status === 'CANCELED'
-                  ? 'bg-red-100 text-red-800'
-                  : 'bg-yellow-100 text-yellow-800'
-              }`}>
-                {event.status === 'PUBLISHED' ? 'Publié' : event.status === 'CANCELED' ? 'Annulé' : 'Brouillon'}
-              </span>
+            {/* Statut */}
+            <div className="md:col-span-2">
+              <label htmlFor="status" className="block text-sm font-medium text-gray-700 mb-2">
+                Statut de l'événement *
+              </label>
+              <select
+                id="status"
+                name="status"
+                value={formData.status}
+                onChange={handleInputChange}
+                required
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                disabled={loading}
+              >
+                <option value={EventStatus.DRAFT}>Brouillon</option>
+                <option value={EventStatus.PUBLISHED}>Publié</option>
+                <option value={EventStatus.CANCELED}>Annulé</option>
+              </select>
+              <p className="mt-1 text-sm text-gray-500">
+                {formData.status === EventStatus.DRAFT && "L'événement n'est pas visible publiquement"}
+                {formData.status === EventStatus.PUBLISHED && "L'événement est visible et les inscriptions sont ouvertes"}
+                {formData.status === EventStatus.CANCELED && "L'événement est annulé et les inscriptions sont fermées"}
+              </p>
             </div>
           </div>
+
+
 
           {/* Boutons d'action */}
           <div className="flex flex-col-reverse sm:flex-row gap-4 pt-6 border-t border-gray-200">

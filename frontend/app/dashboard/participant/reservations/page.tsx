@@ -94,7 +94,11 @@ export default function ParticipantReservations() {
       return false;
     }
 
-    // Vérifier si l'événement n'est pas passé
+    // Vérifier si l'événement existe et n'est pas passé
+    if (!reservation.event) {
+      return false;
+    }
+    
     const eventDate = new Date(reservation.event.date);
     const now = new Date();
     
@@ -195,31 +199,45 @@ export default function ParticipantReservations() {
                             </svg>
                           </div>
                           <div>
-                            <h3 className="text-sm font-medium text-gray-900">
-                              {reservation.event.title}
-                            </h3>
-                            <p className="text-sm text-gray-500 mt-1">
-                              {reservation.event.category}
-                            </p>
+                            {reservation.event ? (
+                              <>
+                                <h3 className="text-sm font-medium text-gray-900">
+                                  {reservation.event.title}
+                                </h3>
+                                <p className="text-sm text-gray-500 mt-1">
+                                  {reservation.event.category}
+                                </p>
+                              </>
+                            ) : (
+                              <div className="text-sm text-gray-400 italic">
+                                Événement supprimé ou introuvable
+                              </div>
+                            )}
                           </div>
                         </div>
                       </td>
                       <td className="py-4 px-6 text-sm text-gray-900">
-                        {new Date(reservation.event.date).toLocaleDateString('fr-FR', {
-                          weekday: 'short',
-                          year: 'numeric',
-                          month: 'short',
-                          day: 'numeric',
-                        })}
-                        <div className="text-xs text-gray-500">
-                          {new Date(reservation.event.date).toLocaleTimeString('fr-FR', {
-                            hour: '2-digit',
-                            minute: '2-digit',
-                          })}
-                        </div>
+                        {reservation.event ? (
+                          <>
+                            {new Date(reservation.event.date).toLocaleDateString('fr-FR', {
+                              weekday: 'short',
+                              year: 'numeric',
+                              month: 'short',
+                              day: 'numeric',
+                            })}
+                            <div className="text-xs text-gray-500">
+                              {new Date(reservation.event.date).toLocaleTimeString('fr-FR', {
+                                hour: '2-digit',
+                                minute: '2-digit',
+                              })}
+                            </div>
+                          </>
+                        ) : (
+                          <span className="text-gray-400 italic">-</span>
+                        )}
                       </td>
                       <td className="py-4 px-6 text-sm text-gray-900">
-                        {reservation.event.location}
+                        {reservation.event?.location || '-'}
                       </td>
                       <td className="py-4 px-6">
                         {getStatusBadge(reservation.status)}

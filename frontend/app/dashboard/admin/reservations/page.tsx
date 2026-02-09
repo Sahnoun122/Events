@@ -64,17 +64,17 @@ export default function ReservationsManagementPage() {
 
     // Filtrage par événement
     if (eventFilter) {
-      filtered = filtered.filter(reservation => reservation.event._id === eventFilter);
+      filtered = filtered.filter(reservation => reservation.event?._id === eventFilter);
     }
 
     // Filtrage par recherche (participant)
     if (searchTerm) {
       const searchLower = searchTerm.toLowerCase();
       filtered = filtered.filter(reservation =>
-        reservation.event.title.toLowerCase().includes(searchLower) ||
+        (reservation.event?.title || '').toLowerCase().includes(searchLower) ||
         (reservation.participant?.fullName || '').toLowerCase().includes(searchLower) ||
         (reservation.participant?.email || '').toLowerCase().includes(searchLower) ||
-        reservation.event.location.toLowerCase().includes(searchLower)
+        (reservation.event?.location || '').toLowerCase().includes(searchLower)
       );
     }
 
@@ -88,8 +88,8 @@ export default function ReservationsManagementPage() {
           bValue = new Date(b.createdAt);
           break;
         case 'event':
-          aValue = a.event.title;
-          bValue = b.event.title;
+          aValue = a.event?.title || '';
+          bValue = b.event?.title || '';
           break;
         case 'user':
           aValue = a.participant?.fullName || '';
@@ -440,27 +440,41 @@ export default function ReservationsManagementPage() {
                         </td>
                         <td className="py-4 px-6">
                           <div>
-                            <h3 className="text-sm font-medium text-gray-900">
-                              {reservation.event.title}
-                            </h3>
-                            <p className="text-sm text-gray-500">
-                              {reservation.event.location}
-                            </p>
+                            {reservation.event ? (
+                              <>
+                                <h3 className="text-sm font-medium text-gray-900">
+                                  {reservation.event.title}
+                                </h3>
+                                <p className="text-sm text-gray-500">
+                                  {reservation.event.location}
+                                </p>
+                              </>
+                            ) : (
+                              <div className="text-sm text-gray-400 italic">
+                                Événement supprimé ou introuvable
+                              </div>
+                            )}
                           </div>
                         </td>
                         <td className="py-4 px-6 text-sm text-gray-900">
-                          {new Date(reservation.event.date).toLocaleDateString('fr-FR', {
-                            weekday: 'short',
-                            year: 'numeric',
-                            month: 'short',
-                            day: 'numeric',
-                          })}
-                          <div className="text-xs text-gray-500">
-                            {new Date(reservation.event.date).toLocaleTimeString('fr-FR', {
-                              hour: '2-digit',
-                              minute: '2-digit',
-                            })}
-                          </div>
+                          {reservation.event ? (
+                            <>
+                              {new Date(reservation.event.date).toLocaleDateString('fr-FR', {
+                                weekday: 'short',
+                                year: 'numeric',
+                                month: 'short',
+                                day: 'numeric',
+                              })}
+                              <div className="text-xs text-gray-500">
+                                {new Date(reservation.event.date).toLocaleTimeString('fr-FR', {
+                                  hour: '2-digit',
+                                  minute: '2-digit',
+                                })}
+                              </div>
+                            </>
+                          ) : (
+                            <span className="text-gray-400 italic">-</span>
+                          )}
                         </td>
                         <td className="py-4 px-6">
                           <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusBadge(reservation.status)}`}>

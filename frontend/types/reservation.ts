@@ -14,7 +14,7 @@ export interface Reservation {
     location: string;
     capacity: number;
     category?: string;
-  };
+  } | null;
   participant: {
     _id: string;
     fullName: string;

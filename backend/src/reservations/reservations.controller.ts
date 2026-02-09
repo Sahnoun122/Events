@@ -120,6 +120,27 @@ export class ReservationsController {
       refused: allReservations.filter(r => r.status === ReservationStatus.REFUSED).length,
       
       byEvent: allReservations.reduce((acc, reservation) => {
+        // Handle null events (when events have been deleted)
+        if (!reservation.event) {
+          const nullEventId = 'deleted_event';
+          if (!acc[nullEventId]) {
+            acc[nullEventId] = {
+              eventTitle: 'Événement supprimé',
+              capacity: 0,
+              confirmed: 0,
+              pending: 0,
+              total: 0
+            };
+          }
+          acc[nullEventId].total++;
+          if (reservation.status === ReservationStatus.CONFIRMED) {
+            acc[nullEventId].confirmed++;
+          } else if (reservation.status === ReservationStatus.PENDING) {
+            acc[nullEventId].pending++;
+          }
+          return acc;
+        }
+
         const eventId = (reservation.event._id || reservation.event).toString();
         if (!acc[eventId]) {
           const isPopulated = reservation.event && typeof reservation.event === 'object' && 'title' in reservation.event;

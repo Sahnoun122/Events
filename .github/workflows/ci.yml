@@ -1,20 +1,16 @@
 name: CI/CD Pipeline
 
-# Déclenchement automatique
 on:
   push:
     branches: [ main, master, develop ]
   pull_request:
     branches: [ main, master, develop ]
 
-# Variables d'environnement globales
 env:
   NODE_VERSION: '18'
 
 jobs:
-  # ===========================================
-  # JOB BACKEND
-  # ===========================================
+
   backend:
     name: Backend CI/CD
     runs-on: ubuntu-latest
@@ -24,17 +20,14 @@ jobs:
         working-directory: ./backend
 
     steps:
-    # 1. Checkout du code
     - name: 📥 Checkout code
       uses: actions/checkout@v4
 
-    # 2. Setup Node.js
     - name: 🚀 Setup Node.js
       uses: actions/setup-node@v4
       with:
         node-version: ${{ env.NODE_VERSION }}
 
-    # 3. Cache des dépendances
     - name: 📦 Cache node modules
       uses: actions/cache@v3
       with:
@@ -43,27 +36,21 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-backend-node-
 
-    # 4. Installation des dépendances
     - name: 📋 Install dependencies
       run: npm ci
 
-    # 5. Lint
     - name: 🔍 Run ESLint
       run: npm run lint
 
-    # 6. Tests unitaires
     - name: 🧪 Run unit tests
       run: npm run test
 
-    # 7. Tests e2e
     - name: 🧪 Run e2e tests
       run: npm run test:e2e
 
-    # 8. Build
     - name: 🏗️ Build application
       run: npm run build
 
-    # 9. Upload build artifacts (optionnel)
     - name: 📤 Upload build artifacts
       uses: actions/upload-artifact@v3
       if: success()
@@ -72,9 +59,7 @@ jobs:
         path: backend/dist/
         retention-days: 7
 
-  # ===========================================
-  # JOB FRONTEND
-  # ===========================================
+
   frontend:
     name: Frontend CI/CD
     runs-on: ubuntu-latest
@@ -84,17 +69,14 @@ jobs:
         working-directory: ./frontend
 
     steps:
-    # 1. Checkout du code
     - name: 📥 Checkout code
       uses: actions/checkout@v4
 
-    # 2. Setup Node.js
     - name: 🚀 Setup Node.js
       uses: actions/setup-node@v4
       with:
         node-version: ${{ env.NODE_VERSION }}
 
-    # 3. Cache des dépendances
     - name: 📦 Cache node modules
       uses: actions/cache@v3
       with:
@@ -103,19 +85,15 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-frontend-node-
 
-    # 4. Installation des dépendances
     - name: 📋 Install dependencies
       run: npm ci
 
-    # 5. Lint
     - name: 🔍 Run ESLint
       run: npm run lint
 
-    # 6. Build (Next.js inclut les vérifications TypeScript)
     - name: 🏗️ Build application
       run: npm run build
 
-    # 7. Upload build artifacts (optionnel)
     - name: 📤 Upload build artifacts
       uses: actions/upload-artifact@v3
       if: success()
@@ -124,9 +102,7 @@ jobs:
         path: frontend/.next/
         retention-days: 7
 
-  # ===========================================
-  # JOB DOCKER BUILD (optionnel)
-  # ===========================================
+
   docker:
     name: Docker Build Test
     runs-on: ubuntu-latest
@@ -137,26 +113,21 @@ jobs:
     - name: 📥 Checkout code
       uses: actions/checkout@v4
 
-    # Test build Docker Backend
     - name: 🐳 Test Docker build - Backend
       run: |
         cd backend
         docker build -t events-backend:test .
 
-    # Test build Docker Frontend
     - name: 🐳 Test Docker build - Frontend
       run: |
         cd frontend
         docker build -t events-frontend:test .
 
-    # Test Docker Compose
     - name: 🐳 Test Docker Compose
       run: |
         docker-compose -f docker-compose.yml config
 
-  # ===========================================
-  # JOB ANALYSE DE SÉCURITÉ
-  # ===========================================
+
   security:
     name: Security Audit
     runs-on: ubuntu-latest
@@ -171,21 +142,17 @@ jobs:
       with:
         node-version: ${{ env.NODE_VERSION }}
 
-    # Audit de sécurité Backend
     - name: 🔒 Security audit - Backend
       run: |
         cd backend
         npm audit --audit-level=high
 
-    # Audit de sécurité Frontend
     - name: 🔒 Security audit - Frontend
       run: |
         cd frontend
         npm audit --audit-level=high
 
-  # ===========================================
-  # JOB NOTIFICATION (si échec)
-  # ===========================================
+
   notify:
     name: Notify Status
     runs-on: ubuntu-latest

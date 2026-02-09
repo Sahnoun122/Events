@@ -137,19 +137,19 @@ jobs:
 
       # 🐳 Test Docker Compose Configuration
       - name: Test Docker Compose
-        run: docker-compose -f docker-compose.yml config
+        run: docker compose -f docker-compose.yml config
 
       # 🐳 Start Services and Run Integration Tests
       - name: Start Services for Integration Tests
         run: |
-          docker-compose -f docker-compose.yml up -d mongodb
+          docker compose -f docker-compose.yml up -d mongodb
           sleep 10
           echo "✅ Database service started successfully"
 
       # 🧪 Stop Test Services
       - name: Stop Test Services
         if: always()
-        run: docker-compose -f docker-compose.yml down
+        run: docker compose -f docker-compose.yml down
 
       # 📊 Final Status Summary
       - name: Pipeline Summary

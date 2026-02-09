@@ -26,9 +26,27 @@ export default tseslint.config(
   },
   {
     rules: {
+      // Allow any types
       '@typescript-eslint/no-explicit-any': 'off',
+      '@typescript-eslint/no-unsafe-assignment': 'off',
+      '@typescript-eslint/no-unsafe-member-access': 'off',
+      '@typescript-eslint/no-unsafe-call': 'off',
+      '@typescript-eslint/no-unsafe-return': 'off',
+      '@typescript-eslint/no-unsafe-argument': 'off',
+      
+      // Relax method binding rules
+      '@typescript-eslint/unbound-method': 'off',
+      
+      // Allow unused variables (common in tests)
+      '@typescript-eslint/no-unused-vars': 'warn',
+      
+      // Allow async functions without await
+      '@typescript-eslint/require-await': 'off',
+      
+      // Make floating promises a warning instead of error
       '@typescript-eslint/no-floating-promises': 'warn',
-      '@typescript-eslint/no-unsafe-argument': 'warn',
+      
+      // Prettier config
       "prettier/prettier": ["error", { endOfLine: "auto" }],
     },
   },

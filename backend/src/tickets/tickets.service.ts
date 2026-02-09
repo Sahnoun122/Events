@@ -51,7 +51,7 @@ export class TicketsService {
     }
 
     if (reservation.status !== ReservationStatus.CONFIRMED) {
-      console.log('⚠️  AVERTISSEMENT: Génération de ticket pour réservation non confirmée (mode test)');
+      throw new BadRequestException('Ticket can only be generated for confirmed reservations');
     }
 
     const doc = new PDFDocument({ size: 'A4', margin: 50 });

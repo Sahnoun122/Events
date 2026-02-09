@@ -21,7 +21,8 @@ describe('ReservationsController', () => {
   };
 
   const mockUser = {
-    _id: new Types.ObjectId().toString(),
+    _id: '6989b47de628c705c3057ab3',
+    id: '6989b47de628c705c3057ab3',
     email: 'test@example.com',
     role: 'PARTICIPANT',
   };

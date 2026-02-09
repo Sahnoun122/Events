@@ -32,7 +32,6 @@ export default function EventDetailPage({ params }: { params: { id: string } }) 
       
       setEvent(eventData);
       
-      // Vérifier s'il y a une réservation existante
       await checkExistingReservation();
       
     } catch (error) {
@@ -69,9 +68,7 @@ export default function EventDetailPage({ params }: { params: { id: string } }) 
     try {
       setReservationLoading(true);
       
-      // Créer la réservation via l'API
       const reservation = await reservationsService.createReservation(event._id, {
-        comment: '' // Vous pouvez ajouter un champ commentaire plus tard
       });
       
       setReservationSuccess(true);

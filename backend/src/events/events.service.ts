@@ -32,7 +32,7 @@ export class EventsService {
       .find({ status: EventStatus.PUBLISHED })
       .sort({ date: 1 });
   }
-
+  
   async findAllAdmin() {
     return this.eventModel.find().sort({ createdAt: -1 });
   }

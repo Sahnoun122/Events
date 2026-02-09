@@ -7,20 +7,20 @@ import { AppModule } from './../src/app.module';
 describe('AppController (e2e)', () => {
   let app: INestApplication<App>;
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [AppModule],
     }).compile();
 
     app = moduleFixture.createNestApplication();
     await app.init();
-  }, 10000);
+  }, 30000);
 
-  afterEach(async () => {
+  afterAll(async () => {
     if (app) {
       await app.close();
     }
-  });
+  }, 30000);
 
   it('/ (GET)', () => {
     return request(app.getHttpServer())

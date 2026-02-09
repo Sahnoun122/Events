@@ -11,11 +11,11 @@ import {
 
 import { ReservationsService } from './reservations.service';
 import { CreateReservationDto } from './dto/create-reservation.dto';
-import { ReservationStatus } from 'src/common/enums/reservation-status.enum';
-import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
+import { ReservationStatus } from '../common/enums/reservation-status.enum';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
 import { Roles } from '../common/decorators/roles.decorator';
-import { Role } from 'src/common/enums/role.enum';
+import { Role } from '../common/enums/role.enum';
 import { CurrentUser } from '../auth/current-user.decorator';
 
 @Controller('reservations')

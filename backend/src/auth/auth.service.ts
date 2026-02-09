@@ -2,8 +2,8 @@
 import { JwtService } from '@nestjs/jwt';
 import { BadRequestException , Injectable , UnauthorizedException } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
-import { UsersService } from 'src/users/users.service';
-import { Role } from 'src/common/enums/role.enum';
+import { UsersService } from '../users/users.service';
+import { Role } from '../common/enums/role.enum';
 
 @Injectable()
 export class AuthService {

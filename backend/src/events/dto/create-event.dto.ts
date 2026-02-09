@@ -7,7 +7,7 @@ import {
   IsString,
   Min,
 } from 'class-validator';
-import { EventStatus } from 'src/common/enums/event-status.enum';
+import { EventStatus } from '../../common/enums/event-status.enum';
 
 export class CreateEventDto {
   @IsString()

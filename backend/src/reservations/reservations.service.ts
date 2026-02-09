@@ -9,9 +9,9 @@ import {
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { Reservation , ReservationDocument } from './reservation.schema';
-import { ReservationStatus } from 'src/common/enums/reservation-status.enum';
+import { ReservationStatus } from '../common/enums/reservation-status.enum';
 import { CreateReservationDto } from './dto/create-reservation.dto';
-import { EventStatus } from 'src/common/enums/event-status.enum';
+import { EventStatus } from '../common/enums/event-status.enum';
 import { EventsService } from '../events/events.service';
 
 @Injectable()

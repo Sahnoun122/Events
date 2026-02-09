@@ -4,9 +4,9 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { ReservationsService } from '../reservations/reservations.service';
-import { ReservationStatus } from 'src/common/enums/reservation-status.enum';
+import { ReservationStatus } from '../common/enums/reservation-status.enum';
 import PDFDocument from 'pdfkit';
-import { ReservationDocument } from 'src/reservations/reservation.schema';
+import { ReservationDocument } from '../reservations/reservation.schema';
 
 @Injectable()
 export class TicketsService {

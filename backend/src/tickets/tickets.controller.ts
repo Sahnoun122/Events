@@ -1,10 +1,10 @@
 import { Controller, Get, Param, Res, UseGuards } from '@nestjs/common';
 import { TicketsService } from './tickets.service';
-import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
 import { Roles } from '../common/decorators/roles.decorator';
-import { CurrentUser } from 'src/auth/current-user.decorator';
-import { Role } from 'src/common/enums/role.enum';
+import { CurrentUser } from '../auth/current-user.decorator';
+import { Role } from '../common/enums/role.enum';
 import type { Response } from 'express';
 
 @Controller('tickets')
